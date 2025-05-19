@@ -4,7 +4,6 @@ import 'package:pembelajaran_app/config/theme.dart';
 import 'package:pembelajaran_app/models/models.dart';
 import 'package:pembelajaran_app/services/firebase_service.dart';
 import 'package:pembelajaran_app/widgets/loading_widget.dart';
-
 class EvaluasiScreen extends StatefulWidget {
   const EvaluasiScreen({Key? key}) : super(key: key);
 
@@ -14,7 +13,7 @@ class EvaluasiScreen extends StatefulWidget {
 
 class _EvaluasiScreenState extends State<EvaluasiScreen> {
   final FirebaseService _firebaseService = FirebaseService();
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -224,6 +223,8 @@ class _EvaluasiScreenState extends State<EvaluasiScreen> {
                             style: AppTheme.subtitleLarge.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
+                            maxLines: 2, // Mencegah judul terlalu panjang
+                            overflow: TextOverflow.ellipsis, //
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -237,22 +238,28 @@ class _EvaluasiScreenState extends State<EvaluasiScreen> {
                           const SizedBox(height: 12),
                           Row(
                             children: [
-                              _buildEvaluasiStat(
-                                '${evaluasi.soalIds.length}',
-                                'Soal',
-                                Icons.help_outline,
+                              Flexible( // FIX: Dibungkus Flexible
+                                child: _buildEvaluasiStat(
+                                  '${evaluasi.soalIds.length}',
+                                  'Soal',
+                                  Icons.help_outline,
+                                ),
                               ),
-                              const SizedBox(width: 16),
-                              _buildEvaluasiStat(
-                                _getDifficultyLevel(evaluasi.soalIds.length),
-                                'Tingkat',
-                                Icons.fitness_center,
+                              const SizedBox(width: 12), // Sedikit mengurangi spasi jika perlu
+                              Flexible( // FIX: Dibungkus Flexible
+                                child: _buildEvaluasiStat(
+                                  _getDifficultyLevel(evaluasi.soalIds.length),
+                                  'Tingkat',
+                                  Icons.fitness_center,
+                                ),
                               ),
-                              const SizedBox(width: 16),
-                              _buildEvaluasiStat(
-                                _getEstimatedTime(evaluasi.soalIds.length),
-                                'Waktu',
-                                Icons.timer,
+                              const SizedBox(width: 12), // Sedikit mengurangi spasi jika perlu
+                              Flexible( // FIX: Dibungkus Flexible
+                                child: _buildEvaluasiStat(
+                                  _getEstimatedTime(evaluasi.soalIds.length),
+                                  'Waktu',
+                                  Icons.timer,
+                                ),
                               ),
                             ],
                           ),
@@ -309,6 +316,7 @@ class _EvaluasiScreenState extends State<EvaluasiScreen> {
 
   Widget _buildEvaluasiStat(String value, String label, IconData icon) {
     return Row(
+      mainAxisSize: MainAxisSize.min, // Agar Row tidak mengambil lebar maksimal jika tidak perlu
       children: [
         Icon(
           icon,
@@ -316,10 +324,14 @@ class _EvaluasiScreenState extends State<EvaluasiScreen> {
           color: AppTheme.successColor,
         ),
         const SizedBox(width: 4),
-        Text(
-          '$value $label',
-          style: AppTheme.bodySmall.copyWith(
-            fontWeight: FontWeight.w500,
+        Flexible( // FIX: Dibungkus Flexible
+          child: Text(
+            '$value $label',
+            style: AppTheme.bodySmall.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
+            overflow: TextOverflow.ellipsis, // FIX: Tambahkan overflow handling
+            softWrap: false, // FIX: Cegah wrap, prioritaskan ellipsis
           ),
         ),
       ],
@@ -344,7 +356,7 @@ class _EvaluasiScreenState extends State<EvaluasiScreen> {
 
   String _formatDate(DateTime date) {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
       'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';

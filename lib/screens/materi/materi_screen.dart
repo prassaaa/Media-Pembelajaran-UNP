@@ -228,7 +228,7 @@ class _MateriScreenState extends State<MateriScreen> {
                     child: GridView.builder(
                       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
-                        childAspectRatio: 0.75,
+                        childAspectRatio: 0.70, // Adjusted from 0.75 to give more height
                         crossAxisSpacing: 16,
                         mainAxisSpacing: 16,
                       ),
@@ -298,7 +298,6 @@ class _MateriScreenState extends State<MateriScreen> {
                                   ),
                                 ),
                                 errorWidget: (context, url, error) {
-                                  print("Error loading materi image: $error");
                                   return Container(
                                     color: AppTheme.primaryColorLight.withOpacity(0.2),
                                     child: const Center(
@@ -362,11 +361,13 @@ class _MateriScreenState extends State<MateriScreen> {
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min, // Add this
                     children: [
                       Text(
                         materi.judul,
                         style: AppTheme.subtitleMedium.copyWith(
                           fontWeight: FontWeight.bold,
+                          fontSize: 13, // Slightly reduce font size
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -376,27 +377,41 @@ class _MateriScreenState extends State<MateriScreen> {
                         materi.deskripsi,
                         style: AppTheme.bodySmall.copyWith(
                           color: AppTheme.secondaryTextColor,
+                          fontSize: 11, // Slightly reduce font size
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const Spacer(),
+                      const Spacer(), // Use Spacer to push the date and arrow to the bottom
+                      // Fix Overflow by using a Row with mainAxisSize: min
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const Icon(
-                            Icons.calendar_today,
-                            size: 12,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${materi.updatedAt.day}/${materi.updatedAt.month}/${materi.updatedAt.year}',
-                            style: AppTheme.bodySmall.copyWith(
-                              color: Colors.grey,
-                              fontSize: 10,
+                          // Date with truncated text if needed
+                          Flexible(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.calendar_today,
+                                  size: 10, // Make icon smaller
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(width: 2), // Reduce spacing
+                                Flexible(
+                                  child: Text(
+                                    '${materi.updatedAt.day}/${materi.updatedAt.month}/${materi.updatedAt.year}',
+                                    style: AppTheme.bodySmall.copyWith(
+                                      color: Colors.grey,
+                                      fontSize: 9, // Make text smaller
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const Spacer(),
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
@@ -405,7 +420,7 @@ class _MateriScreenState extends State<MateriScreen> {
                             ),
                             child: const Icon(
                               Icons.arrow_forward_ios,
-                              size: 12,
+                              size: 10, // Make icon smaller
                               color: AppTheme.primaryColor,
                             ),
                           ),
