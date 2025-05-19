@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:pembelajaran_app/config/constants.dart';
 import 'package:pembelajaran_app/config/theme.dart';
+import 'package:pembelajaran_app/screens/splash_screen.dart';
 import 'package:pembelajaran_app/screens/home_screen.dart';
 import 'package:pembelajaran_app/screens/materi/materi_screen.dart';
 import 'package:pembelajaran_app/screens/materi/materi_detail_screen.dart';
@@ -19,6 +20,8 @@ import 'package:pembelajaran_app/screens/admin/admin_evaluasi_screen.dart';
 import 'package:pembelajaran_app/screens/admin/admin_evaluasi_form.dart';
 import 'package:pembelajaran_app/screens/admin/admin_soal_form.dart';
 import 'package:pembelajaran_app/services/firebase_service.dart';
+import 'package:pembelajaran_app/screens/identitas_screen.dart';
+import 'package:pembelajaran_app/screens/admin/admin_identitas_form.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,8 +44,11 @@ class MyApp extends StatelessWidget {
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: AppConstants.routeHome,
+      initialRoute: AppConstants.routeSplash, // Ubah initial route ke splash screen
       routes: {
+        // Splash Screen
+        AppConstants.routeSplash: (context) => const SplashScreen(),
+        
         // User Routes
         AppConstants.routeHome: (context) => const HomeScreen(),
         AppConstants.routeMateri: (context) => const MateriScreen(),
@@ -52,6 +58,7 @@ class MyApp extends StatelessWidget {
         AppConstants.routeEvaluasi: (context) => const EvaluasiScreen(),
         AppConstants.routeEvaluasiDetail: (context) => const EvaluasiDetailScreen(),
         AppConstants.routeHasil: (context) => const HasilScreen(),
+        AppConstants.routeIdentitas: (context) => const IdentitasScreen(),
         
         // Admin Routes
         AppConstants.routeAdmin: (context) => const AdminDashboard(),
@@ -62,6 +69,7 @@ class MyApp extends StatelessWidget {
         AppConstants.routeAdminEvaluasi: (context) => const AdminEvaluasiScreen(),
         AppConstants.routeAdminEvaluasiForm: (context) => const AdminEvaluasiForm(),
         AppConstants.routeAdminSoalForm: (context) => const AdminSoalForm(),
+        AppConstants.routeAdminIdentitas: (context) => const AdminIdentitasForm(),
       },
     );
   }

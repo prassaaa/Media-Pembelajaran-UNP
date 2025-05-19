@@ -170,3 +170,71 @@ class Evaluasi {
     };
   }
 }
+
+// Model untuk Identitas Aplikasi
+class Identitas {
+  final String id;
+  final String namaMahasiswa;
+  final String nimMahasiswa;
+  final String prodiMahasiswa;
+  final String fotoMahasiswaUrl;
+  final String namaDospem1;
+  final String nipDospem1;
+  final String fotoDospem1Url;
+  final String? namaDospem2;
+  final String? nipDospem2;
+  final String? fotoDospem2Url;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Identitas({
+    required this.id,
+    required this.namaMahasiswa,
+    required this.nimMahasiswa,
+    required this.prodiMahasiswa,
+    required this.fotoMahasiswaUrl,
+    required this.namaDospem1,
+    required this.nipDospem1,
+    required this.fotoDospem1Url,
+    this.namaDospem2,
+    this.nipDospem2,
+    this.fotoDospem2Url,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory Identitas.fromMap(Map<String, dynamic> map, String id) {
+    return Identitas(
+      id: id,
+      namaMahasiswa: map['namaMahasiswa'] ?? '',
+      nimMahasiswa: map['nimMahasiswa'] ?? '',
+      prodiMahasiswa: map['prodiMahasiswa'] ?? '',
+      fotoMahasiswaUrl: map['fotoMahasiswaUrl'] ?? '',
+      namaDospem1: map['namaDospem1'] ?? '',
+      nipDospem1: map['nipDospem1'] ?? '',
+      fotoDospem1Url: map['fotoDospem1Url'] ?? '',
+      namaDospem2: map['namaDospem2'],
+      nipDospem2: map['nipDospem2'],
+      fotoDospem2Url: map['fotoDospem2Url'],
+      createdAt: (map['createdAt'] as Timestamp).toDate(),
+      updatedAt: (map['updatedAt'] as Timestamp).toDate(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'namaMahasiswa': namaMahasiswa,
+      'nimMahasiswa': nimMahasiswa,
+      'prodiMahasiswa': prodiMahasiswa,
+      'fotoMahasiswaUrl': fotoMahasiswaUrl,
+      'namaDospem1': namaDospem1,
+      'nipDospem1': nipDospem1,
+      'fotoDospem1Url': fotoDospem1Url,
+      'namaDospem2': namaDospem2,
+      'nipDospem2': nipDospem2,
+      'fotoDospem2Url': fotoDospem2Url,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+    };
+  }
+}

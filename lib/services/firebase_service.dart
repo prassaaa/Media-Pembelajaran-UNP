@@ -12,6 +12,7 @@ class FirebaseService {
   final CollectionReference _videoCollection = FirebaseFirestore.instance.collection('video');
   final CollectionReference _evaluasiCollection = FirebaseFirestore.instance.collection('evaluasi');
   final CollectionReference _soalCollection = FirebaseFirestore.instance.collection('soal');
+  final CollectionReference _identitasCollection = FirebaseFirestore.instance.collection('identitas');
 
   // MATERI OPERATIONS
   // Get semua materi
@@ -599,4 +600,83 @@ class FirebaseService {
       print('Error initializing database: $e');
     }
   }
+
+  // Get Identitas
+Future<Identitas?> getIdentitas() async {
+  try {
+    QuerySnapshot querySnapshot = await _identitasCollection.limit(1).get();
+    
+    if (querySnapshot.docs.isNotEmpty) {
+      DocumentSnapshot doc = querySnapshot.docs.first;
+      return Identitas.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+    }
+    
+    return null;
+  } catch (e) {
+    print('Error getting identitas: $e');
+    return null;
+  }
+}
+
+// Tambah atau Update Identitas
+Future<void> saveIdentitas(Identitas identitas, {File? fotoMahasiswa, File? fotoDospem1, File? fotoDospem2}) async {
+  try {
+    // Upload foto mahasiswa jika ada
+    String fotoMahasiswaUrl = identitas.fotoMahasiswaUrl;
+    if (fotoMahasiswa != null) {
+      String? uploadedUrl = await _cPanelService.uploadImage(fotoMahasiswa);
+      if (uploadedUrl != null) {
+        fotoMahasiswaUrl = uploadedUrl;
+      }
+    }
+    
+    // Upload foto dosen pembimbing 1 jika ada
+    String fotoDospem1Url = identitas.fotoDospem1Url;
+    if (fotoDospem1 != null) {
+      String? uploadedUrl = await _cPanelService.uploadImage(fotoDospem1);
+      if (uploadedUrl != null) {
+        fotoDospem1Url = uploadedUrl;
+      }
+    }
+    
+    // Upload foto dosen pembimbing 2 jika ada
+    String? fotoDospem2Url = identitas.fotoDospem2Url;
+    if (fotoDospem2 != null) {
+      String? uploadedUrl = await _cPanelService.uploadImage(fotoDospem2);
+      if (uploadedUrl != null) {
+        fotoDospem2Url = uploadedUrl;
+      }
+    }
+    
+    // Data untuk disimpan
+    Map<String, dynamic> data = {
+      'namaMahasiswa': identitas.namaMahasiswa,
+      'nimMahasiswa': identitas.nimMahasiswa,
+      'prodiMahasiswa': identitas.prodiMahasiswa,
+      'fotoMahasiswaUrl': fotoMahasiswaUrl,
+      'namaDospem1': identitas.namaDospem1,
+      'nipDospem1': identitas.nipDospem1,
+      'fotoDospem1Url': fotoDospem1Url,
+      'namaDospem2': identitas.namaDospem2,
+      'nipDospem2': identitas.nipDospem2,
+      'fotoDospem2Url': fotoDospem2Url,
+      'updatedAt': FieldValue.serverTimestamp(),
+    };
+    
+    // Cek apakah ada dokumen identitas atau tidak
+    if (identitas.id.isEmpty) {
+      // Tambah data baru jika belum ada
+      data['createdAt'] = FieldValue.serverTimestamp();
+      await _identitasCollection.add(data);
+    } else {
+      // Update data yang sudah ada
+      await _identitasCollection.doc(identitas.id).update(data);
+    }
+    
+    print('Identitas saved successfully');
+  } catch (e) {
+    print('Error saving identitas: $e');
+    throw e;
+  }
+}
 }

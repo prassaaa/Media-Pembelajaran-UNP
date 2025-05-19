@@ -8,24 +8,24 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   void _showAdminPasswordDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext dialogContext) { // Gunakan variabel dialogContext yang berbeda
-      return AdminPasswordDialog(
-        onAuthenticated: (isAuthenticated) {
-          // Tutup dialog terlebih dahulu
-          Navigator.pop(dialogContext);
-          
-          // Kemudian lakukan navigasi jika berhasil
-          if (isAuthenticated) {
-            Navigator.pushNamed(context, AppConstants.routeAdmin);
-          }
-        },
-      );
-    },
-  );
-}
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AdminPasswordDialog(
+          onAuthenticated: (isAuthenticated) {
+            // Tutup dialog terlebih dahulu
+            Navigator.pop(dialogContext);
+            
+            // Kemudian lakukan navigasi jika berhasil
+            if (isAuthenticated) {
+              Navigator.pushNamed(context, AppConstants.routeAdmin);
+            }
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-                          // Header
+            // Header
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
@@ -164,6 +164,16 @@ class HomeScreen extends StatelessWidget {
                             () => Navigator.pushNamed(
                               context,
                               AppConstants.routeEvaluasi,
+                            ),
+                          ),
+                          _buildMenuCard(
+                            context,
+                            'Identitas Pengembang',
+                            Icons.people,
+                            Colors.purple,
+                            () => Navigator.pushNamed(
+                              context,
+                              AppConstants.routeIdentitas,
                             ),
                           ),
                         ],

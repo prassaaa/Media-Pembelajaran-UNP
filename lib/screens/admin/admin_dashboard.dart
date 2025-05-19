@@ -120,6 +120,16 @@ class AdminDashboard extends StatelessWidget {
                     ),
                     _buildMenuCard(
                       context,
+                      'Identitas Pengembang',
+                      Icons.person,
+                      Colors.purple,
+                      () => Navigator.pushNamed(
+                        context,
+                        AppConstants.routeAdminIdentitas,
+                      ),
+                    ),
+                    _buildMenuCard(
+                      context,
                       'Ubah Password',
                       Icons.lock,
                       Colors.deepPurple,

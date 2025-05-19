@@ -4,7 +4,9 @@ class AppConstants {
   static const String appVersion = '1.0.0';
   
   // Navigation routes
+  static const String routeSplash = '/splash';
   static const String routeHome = '/';
+  static const String routeIdentitas = '/identitas';
   static const String routeMateri = '/materi';
   static const String routeMateriDetail = '/materi/detail';
   static const String routeVideo = '/video';
@@ -13,6 +15,7 @@ class AppConstants {
   static const String routeEvaluasiDetail = '/evaluasi/detail';
   static const String routeHasil = '/hasil';
   static const String routeAdmin = '/admin';
+  static const String routeAdminIdentitas = '/admin/identitas';
   static const String routeAdminMateri = '/admin/materi';
   static const String routeAdminMateriForm = '/admin/materi/form';
   static const String routeAdminVideo = '/admin/video';
