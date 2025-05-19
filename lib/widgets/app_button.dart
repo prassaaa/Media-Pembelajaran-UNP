@@ -17,6 +17,7 @@ class AppButton extends StatelessWidget {
   final bool isFullWidth;
   final double? width;
   final double height;
+  final BorderRadius? borderRadius;
 
   const AppButton({
     Key? key,
@@ -27,7 +28,8 @@ class AppButton extends StatelessWidget {
     this.isLoading = false,
     this.isFullWidth = false,
     this.width,
-    this.height = 48,
+    this.height = 52,
+    this.borderRadius,
   }) : super(key: key);
 
   @override
@@ -45,9 +47,19 @@ class AppButton extends StatelessWidget {
   }
 
   Widget _buildElevatedButton() {
-    return SizedBox(
+    return Container(
       width: isFullWidth ? double.infinity : width,
       height: height,
+      decoration: BoxDecoration(
+        borderRadius: borderRadius ?? BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
@@ -55,8 +67,10 @@ class AppButton extends StatelessWidget {
           foregroundColor: Colors.white,
           disabledBackgroundColor: AppTheme.primaryColor.withOpacity(0.6),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: borderRadius ?? BorderRadius.circular(12),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          elevation: 0, // No elevation since we're using custom shadow
         ),
         child: _buildButtonContent(Colors.white),
       ),
@@ -64,9 +78,19 @@ class AppButton extends StatelessWidget {
   }
 
   Widget _buildSecondaryButton() {
-    return SizedBox(
+    return Container(
       width: isFullWidth ? double.infinity : width,
       height: height,
+      decoration: BoxDecoration(
+        borderRadius: borderRadius ?? BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.accentColor.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
@@ -74,8 +98,10 @@ class AppButton extends StatelessWidget {
           foregroundColor: Colors.white,
           disabledBackgroundColor: AppTheme.accentColor.withOpacity(0.6),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: borderRadius ?? BorderRadius.circular(12),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          elevation: 0, // No elevation since we're using custom shadow
         ),
         child: _buildButtonContent(Colors.white),
       ),
@@ -92,8 +118,9 @@ class AppButton extends StatelessWidget {
           foregroundColor: AppTheme.primaryColor,
           side: BorderSide(color: isLoading ? Colors.grey : AppTheme.primaryColor, width: 2),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: borderRadius ?? BorderRadius.circular(12),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
         ),
         child: _buildButtonContent(AppTheme.primaryColor),
       ),
@@ -108,6 +135,10 @@ class AppButton extends StatelessWidget {
         onPressed: isLoading ? null : onPressed,
         style: TextButton.styleFrom(
           foregroundColor: AppTheme.primaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: borderRadius ?? BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
         ),
         child: _buildButtonContent(AppTheme.primaryColor),
       ),
@@ -134,10 +165,14 @@ class AppButton extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, size: 18),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Text(
             text,
-            style: AppTheme.buttonText.copyWith(color: textColor),
+            style: AppTheme.buttonText.copyWith(
+              color: textColor,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       );
@@ -145,7 +180,11 @@ class AppButton extends StatelessWidget {
 
     return Text(
       text,
-      style: AppTheme.buttonText.copyWith(color: textColor),
+      style: AppTheme.buttonText.copyWith(
+        color: textColor,
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 }

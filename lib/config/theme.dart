@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Colors
-  static const Color primaryColor = Color(0xFF2196F3); // Biru utama
-  static const Color primaryColorLight = Color(0xFF64B5F6);
-  static const Color primaryColorDark = Color(0xFF1976D2);
-  static const Color accentColor = Color(0xFF03A9F4);
-  static const Color textColor = Color(0xFF333333);
-  static const Color backgroundColor = Color(0xFFF5F5F5);
+  // Colors - Palet warna yang lebih modern
+  static const Color primaryColor = Color(0xFF4361EE); // Biru utama yang lebih cerah
+  static const Color primaryColorLight = Color(0xFF4CC9F0);
+  static const Color primaryColorDark = Color(0xFF3A0CA3);
+  static const Color accentColor = Color(0xFF7209B7); // Aksen ungu
+  static const Color textColor = Color(0xFF2B2D42);
+  static const Color backgroundColor = Color(0xFFF8F9FA);
   static const Color cardColor = Color(0xFFFFFFFF);
-  static const Color errorColor = Color(0xFFE53935);
-  static const Color successColor = Color(0xFF4CAF50);
-  static const Color warningColor = Color(0xFFFFC107);
-  static const Color infoColor = Color(0xFF2196F3);
+  static const Color errorColor = Color(0xFFE63946);
+  static const Color successColor = Color(0xFF06D6A0);
+  static const Color warningColor = Color(0xFFFFD166);
+  static const Color infoColor = Color(0xFF4CC9F0);
+  static const Color secondaryTextColor = Color(0xFF6C757D);
 
   // Text Styles
   static TextStyle get headingLarge => GoogleFonts.poppins(
@@ -89,6 +90,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
+        shadowColor: Colors.black.withOpacity(0.1),
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: primaryColor,
@@ -100,6 +102,7 @@ class AppTheme {
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -109,7 +112,9 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          minimumSize: const Size(120, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          elevation: 3,
+          shadowColor: primaryColor.withOpacity(0.3),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -120,13 +125,14 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          minimumSize: const Size(120, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: primaryColor,
           textStyle: buttonText.copyWith(color: primaryColor),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -135,11 +141,11 @@ class AppTheme {
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
+          borderSide: BorderSide(color: Colors.grey.withOpacity(0.3), width: 1),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
+          borderSide: BorderSide(color: Colors.grey.withOpacity(0.3), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -151,6 +157,8 @@ class AppTheme {
         ),
         hintStyle: bodyMedium.copyWith(color: Colors.grey),
         labelStyle: bodyMedium.copyWith(color: textColor),
+        prefixIconColor: primaryColor,
+        suffixIconColor: primaryColor,
       ),
       textTheme: TextTheme(
         displayLarge: headingLarge,
@@ -162,14 +170,25 @@ class AppTheme {
         bodyMedium: bodyMedium,
         bodySmall: bodySmall,
       ),
-      dividerTheme: const DividerThemeData(
+      dividerTheme: DividerThemeData(
         space: 24,
         thickness: 1,
-        color: Colors.grey,
+        color: Colors.grey.withOpacity(0.2),
       ),
       iconTheme: const IconThemeData(
         color: primaryColor,
         size: 24,
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: Colors.white,
+        selectedItemColor: primaryColor,
+        unselectedItemColor: Colors.grey.withOpacity(0.6),
+        selectedLabelStyle: bodySmall.copyWith(fontWeight: FontWeight.bold),
+        unselectedLabelStyle: bodySmall,
+        type: BottomNavigationBarType.fixed,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        elevation: 8,
       ),
     );
   }

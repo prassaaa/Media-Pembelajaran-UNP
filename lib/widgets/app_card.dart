@@ -12,6 +12,7 @@ class AppCard extends StatelessWidget {
   final double? height;
   final VoidCallback? onTap;
   final bool isOutlined;
+  final bool hasShadow;
 
   const AppCard({
     Key? key,
@@ -25,6 +26,7 @@ class AppCard extends StatelessWidget {
     this.height,
     this.onTap,
     this.isOutlined = false,
+    this.hasShadow = true,
   }) : super(key: key);
 
   @override
@@ -33,9 +35,21 @@ class AppCard extends StatelessWidget {
       width: width,
       height: height,
       margin: margin ?? const EdgeInsets.all(8.0),
+      decoration: hasShadow
+          ? BoxDecoration(
+              borderRadius: borderRadius ?? BorderRadius.circular(16.0),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            )
+          : null,
       child: Material(
         color: backgroundColor ?? AppTheme.cardColor,
-        elevation: isOutlined ? 0 : (elevation ?? 2.0),
+        elevation: (!hasShadow || isOutlined) ? 0 : (elevation ?? 2.0),
         borderRadius: borderRadius ?? BorderRadius.circular(16.0),
         clipBehavior: Clip.antiAlias,
         shape: isOutlined
@@ -69,6 +83,7 @@ class ImageCard extends StatelessWidget {
   final double width;
   final Widget? footer;
   final bool isNetworkImage;
+  final IconData? fallbackIcon;
 
   const ImageCard({
     Key? key,
@@ -80,6 +95,7 @@ class ImageCard extends StatelessWidget {
     this.width = double.infinity,
     this.footer,
     this.isNetworkImage = true,
+    this.fallbackIcon,
   }) : super(key: key);
 
   @override
@@ -88,9 +104,19 @@ class ImageCard extends StatelessWidget {
       width: width,
       height: height,
       margin: const EdgeInsets.all(8.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16.0),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
       child: Material(
         color: AppTheme.cardColor,
-        elevation: 3.0,
+        elevation: 0,
         borderRadius: BorderRadius.circular(16.0),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -112,7 +138,7 @@ class ImageCard extends StatelessWidget {
                           errorBuilder: (context, error, stackTrace) {
                             return Center(
                               child: Icon(
-                                Icons.image_not_supported,
+                                fallbackIcon ?? Icons.image_not_supported,
                                 color: AppTheme.primaryColorLight,
                                 size: 42,
                               ),
@@ -138,7 +164,7 @@ class ImageCard extends StatelessWidget {
                           errorBuilder: (context, error, stackTrace) {
                             return Center(
                               child: Icon(
-                                Icons.image_not_supported,
+                                fallbackIcon ?? Icons.image_not_supported,
                                 color: AppTheme.primaryColorLight,
                                 size: 42,
                               ),
@@ -147,6 +173,7 @@ class ImageCard extends StatelessWidget {
                         ),
                 ),
               ),
+
               Expanded(
                 flex: 3,
                 child: Padding(

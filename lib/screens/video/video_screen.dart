@@ -4,7 +4,6 @@ import 'package:pembelajaran_app/config/constants.dart';
 import 'package:pembelajaran_app/config/theme.dart';
 import 'package:pembelajaran_app/models/models.dart';
 import 'package:pembelajaran_app/services/firebase_service.dart';
-import 'package:pembelajaran_app/widgets/app_card.dart';
 import 'package:pembelajaran_app/widgets/loading_widget.dart';
 
 class VideoScreen extends StatefulWidget {
@@ -17,148 +16,317 @@ class VideoScreen extends StatefulWidget {
 class _VideoScreenState extends State<VideoScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   late Stream<List<Video>> _videoStream;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _isSearching = false;
 
   @override
   void initState() {
     super.initState();
     _videoStream = _firebaseService.getVideos();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Video Pembelajaran'),
-        centerTitle: true,
-      ),
-      body: StreamBuilder<List<Video>>(
-        stream: _videoStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingWidget(
-              message: 'Memuat daftar video...',
-            );
-          }
-
-          if (snapshot.hasError) {
-            return AppErrorWidget(
-              message: 'Terjadi kesalahan: ${snapshot.error}',
-              onRetry: () {
-                setState(() {
-                  _videoStream = _firebaseService.getVideos();
-                });
-              },
-            );
-          }
-
-          final List<Video> videoList = snapshot.data ?? [];
-
-          if (videoList.isEmpty) {
-            return const EmptyStateWidget(
-              title: 'Belum Ada Video',
-              subtitle: 'Video pembelajaran belum tersedia saat ini.',
-              icon: Icons.video_library,
-            );
-          }
-
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Text(
-                'Pilih Video Pembelajaran',
-                style: AppTheme.headingMedium,
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              expandedHeight: 180.0,
+              floating: false,
+              pinned: true,
+              backgroundColor: AppTheme.accentColor,
+              flexibleSpace: FlexibleSpaceBar(
+                centerTitle: true,
+                title: Text(
+                  _isSearching ? '' : 'Video Pembelajaran',
+                  style: AppTheme.subtitleLarge.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppTheme.accentColor,
+                        AppTheme.primaryColorDark,
+                      ],
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: -50,
+                        top: -30,
+                        child: Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: -20,
+                        bottom: -50,
+                        child: Container(
+                          width: 150,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Align(
+                          alignment: Alignment.bottomLeft,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.play_circle_fill,
+                                color: Colors.white,
+                                size: 36,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Video Edukasi Interaktif',
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                              const SizedBox(height: 50), // Space for title
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Pilih video pembelajaran yang ingin kamu tonton',
-                style: AppTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: videoList.length,
-                itemBuilder: (context, index) {
-                  final video = videoList[index];
-                  return _buildVideoCard(context, video);
-                },
-              ),
-            ],
-          );
+              actions: [
+                IconButton(
+                  icon: Icon(_isSearching ? Icons.close : Icons.search),
+                  color: Colors.white,
+                  onPressed: () {
+                    setState(() {
+                      _isSearching = !_isSearching;
+                      if (!_isSearching) {
+                        _searchController.clear();
+                      }
+                    });
+                  },
+                ),
+              ],
+              bottom: _isSearching
+                  ? PreferredSize(
+                      preferredSize: const Size.fromHeight(60),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: TextField(
+                          controller: _searchController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'Cari video...',
+                            hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                            prefixIcon: const Icon(Icons.search, color: Colors.white),
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.2),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+          ];
         },
+        body: StreamBuilder<List<Video>>(
+          stream: _videoStream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const LoadingWidget(
+                message: 'Memuat daftar video...',
+              );
+            }
+
+            if (snapshot.hasError) {
+              return AppErrorWidget(
+                message: 'Terjadi kesalahan: ${snapshot.error}',
+                onRetry: () {
+                  setState(() {
+                    _videoStream = _firebaseService.getVideos();
+                  });
+                },
+              );
+            }
+
+            List<Video> videoList = snapshot.data ?? [];
+            
+            // Filter video berdasarkan pencarian
+            if (_searchQuery.isNotEmpty) {
+              videoList = videoList.where((video) {
+                return video.judul.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                    video.deskripsi.toLowerCase().contains(_searchQuery.toLowerCase());
+              }).toList();
+            }
+
+            if (videoList.isEmpty) {
+              return EmptyStateWidget(
+                title: _searchQuery.isNotEmpty 
+                    ? 'Video Tidak Ditemukan' 
+                    : 'Belum Ada Video',
+                subtitle: _searchQuery.isNotEmpty
+                    ? 'Tidak ada video yang sesuai dengan pencarian "${_searchQuery}"'
+                    : 'Video pembelajaran belum tersedia saat ini.',
+                icon: Icons.video_library,
+              );
+            }
+
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!_isSearching) ...[
+                    Text(
+                      'Koleksi Video Pembelajaran',
+                      style: AppTheme.headingSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Tonton video tutorial yang menarik dan edukatif',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: AppTheme.secondaryTextColor,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: videoList.length,
+                      itemBuilder: (context, index) {
+                        final video = videoList[index];
+                        return _buildVideoCard(context, video);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _buildVideoCard(BuildContext context, Video video) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: AppCard(
-        onTap: () {
-          Navigator.pushNamed(
-            context,
-            AppConstants.routeVideoDetail,
-            arguments: video,
-          );
-        },
-        padding: const EdgeInsets.all(0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Thumbnail
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColorLight.withOpacity(0.2),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                ),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.accentColor.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            Navigator.pushNamed(
+              context,
+              AppConstants.routeVideoDetail,
+              arguments: video,
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Thumbnail
+              AspectRatio(
+                aspectRatio: 16 / 9,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // Thumbnail image
-                    ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
-                      ),
+                    Hero(
+                      tag: 'video_thumbnail_${video.id}',
                       child: video.thumbnailUrl.isNotEmpty
                           ? CachedNetworkImage(
                               imageUrl: video.thumbnailUrl,
                               fit: BoxFit.cover,
-                              placeholder: (context, url) => Center(
-                                child: CircularProgressIndicator(
-                                  color: AppTheme.primaryColor.withOpacity(0.7),
+                              placeholder: (context, url) => Container(
+                                color: AppTheme.accentColor.withOpacity(0.2),
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
-                              errorWidget: (context, url, error) => const Center(
-                                child: Icon(
-                                  Icons.broken_image,
-                                  size: 48,
-                                  color: Colors.grey,
+                              errorWidget: (context, url, error) => Container(
+                                color: AppTheme.accentColor.withOpacity(0.2),
+                                child: const Center(
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    color: Colors.white,
+                                    size: 48,
+                                  ),
                                 ),
                               ),
                             )
-                          : const Center(
-                              child: Icon(
-                                Icons.video_library,
-                                size: 48,
-                                color: Colors.grey,
+                          : Container(
+                              color: AppTheme.accentColor.withOpacity(0.2),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.video_library,
+                                  color: Colors.white,
+                                  size: 48,
+                                ),
                               ),
                             ),
                     ),
-
-                    // Play button overlay
+                    // Play Button Overlay
                     Center(
                       child: Container(
                         width: 60,
                         height: 60,
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.8),
+                          color: AppTheme.accentColor.withOpacity(0.9),
                           shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
                         ),
                         child: const Icon(
                           Icons.play_arrow,
@@ -167,70 +335,150 @@ class _VideoScreenState extends State<VideoScreen> {
                         ),
                       ),
                     ),
+                    // Duration tag
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.7),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.videocam,
+                              color: Colors.white,
+                              size: 12,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Video',
+                              style: AppTheme.bodySmall.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-            ),
 
-            // Video info
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    video.judul,
-                    style: AppTheme.subtitleLarge.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    video.deskripsi,
-                    style: AppTheme.bodyMedium,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.calendar_today,
-                            size: 14,
-                            color: Colors.grey,
+              // Video info
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${video.updatedAt.day}/${video.updatedAt.month}/${video.updatedAt.year}',
-                            style: AppTheme.bodySmall.copyWith(
+                          child: const Icon(
+                            Icons.play_circle_filled,
+                            color: AppTheme.accentColor,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                video.judul,
+                                style: AppTheme.subtitleLarge.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                video.deskripsi,
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: AppTheme.secondaryTextColor,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.calendar_today,
+                              size: 14,
                               color: Colors.grey,
                             ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _formatDate(video.updatedAt),
+                              style: AppTheme.bodySmall.copyWith(
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pushNamed(
+                              context,
+                              AppConstants.routeVideoDetail,
+                              arguments: video,
+                            );
+                          },
+                          icon: const Icon(Icons.play_arrow, size: 16),
+                          label: const Text('Tonton Sekarang'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.accentColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            textStyle: AppTheme.bodySmall.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ],
-                      ),
-                      const Icon(
-                        Icons.arrow_forward_ios,
-                        size: 14,
-                        color: AppTheme.primaryColor,
-                      ),
-                    ],
-                  ),
-                ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
 }
 
-// Widget tambahan yang mungkin diperlukan (jika belum ada di project)
 class AppErrorWidget extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
@@ -310,12 +558,19 @@ class EmptyStateWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 80,
-              color: Colors.grey[400],
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.accentColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 60,
+                color: AppTheme.accentColor,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
               title,
               style: AppTheme.headingMedium,
@@ -324,7 +579,7 @@ class EmptyStateWidget extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               subtitle,
-              style: AppTheme.bodyMedium.copyWith(color: Colors.grey[600]),
+              style: AppTheme.bodyMedium.copyWith(color: AppTheme.secondaryTextColor),
               textAlign: TextAlign.center,
             ),
           ],

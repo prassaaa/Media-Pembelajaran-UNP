@@ -4,7 +4,6 @@ import 'package:pembelajaran_app/config/constants.dart';
 import 'package:pembelajaran_app/config/theme.dart';
 import 'package:pembelajaran_app/models/models.dart';
 import 'package:pembelajaran_app/services/firebase_service.dart';
-import 'package:pembelajaran_app/widgets/app_card.dart';
 import 'package:pembelajaran_app/widgets/loading_widget.dart';
 
 class MateriScreen extends StatefulWidget {
@@ -17,197 +16,413 @@ class MateriScreen extends StatefulWidget {
 class _MateriScreenState extends State<MateriScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   late Stream<List<Materi>> _materiStream;
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _materiStream = _firebaseService.getMateri();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text;
+      });
+    });
+  }
+  
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Materi Pembelajaran'),
-        centerTitle: true,
-      ),
-      body: StreamBuilder<List<Materi>>(
-        stream: _materiStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const LoadingWidget(
-              message: 'Memuat daftar materi...',
-            );
-          }
-
-          if (snapshot.hasError) {
-            return AppErrorWidget(
-              message: 'Terjadi kesalahan: ${snapshot.error}',
-              onRetry: () {
-                setState(() {
-                  _materiStream = _firebaseService.getMateri();
-                });
-              },
-            );
-          }
-
-          final List<Materi> materiList = snapshot.data ?? [];
-
-          if (materiList.isEmpty) {
-            return const EmptyStateWidget(
-              title: 'Belum Ada Materi',
-              subtitle: 'Materi pembelajaran belum tersedia saat ini.',
-              icon: Icons.book,
-            );
-          }
-
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              Text(
-                'Pilih Materi Pembelajaran',
-                style: AppTheme.headingMedium,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Pilih materi pembelajaran yang ingin kamu pelajari',
-                style: AppTheme.bodyMedium,
-              ),
-              const SizedBox(height: 24),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              expandedHeight: 180.0,
+              floating: false,
+              pinned: true,
+              backgroundColor: AppTheme.primaryColor,
+              flexibleSpace: FlexibleSpaceBar(
+                centerTitle: true,
+                title: Text(
+                  _isSearching ? '' : 'Materi Pembelajaran',
+                  style: AppTheme.subtitleLarge.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                itemCount: materiList.length,
-                itemBuilder: (context, index) {
-                  final materi = materiList[index];
-                  return _buildMateriCard(context, materi);
-                },
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppTheme.primaryColor,
+                        AppTheme.primaryColorDark,
+                      ],
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: -30,
+                        top: -30,
+                        child: Container(
+                          width: 150,
+                          height: 150,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: -20,
+                        bottom: -20,
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Align(
+                          alignment: Alignment.bottomLeft,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.menu_book_rounded,
+                                color: Colors.white,
+                                size: 36,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Koleksi Materi Digital',
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                              const SizedBox(height: 50), // Space for title
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ],
-          );
+              actions: [
+                IconButton(
+                  icon: Icon(_isSearching ? Icons.close : Icons.search),
+                  color: Colors.white,
+                  onPressed: () {
+                    setState(() {
+                      _isSearching = !_isSearching;
+                      if (!_isSearching) {
+                        _searchController.clear();
+                      }
+                    });
+                  },
+                ),
+              ],
+              bottom: _isSearching
+                  ? PreferredSize(
+                      preferredSize: const Size.fromHeight(60),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: TextField(
+                          controller: _searchController,
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'Cari materi...',
+                            hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+                            prefixIcon: const Icon(Icons.search, color: Colors.white),
+                            filled: true,
+                            fillColor: Colors.white.withOpacity(0.2),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+          ];
         },
+        body: StreamBuilder<List<Materi>>(
+          stream: _materiStream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const LoadingWidget(
+                message: 'Memuat daftar materi...',
+              );
+            }
+
+            if (snapshot.hasError) {
+              return AppErrorWidget(
+                message: 'Terjadi kesalahan: ${snapshot.error}',
+                onRetry: () {
+                  setState(() {
+                    _materiStream = _firebaseService.getMateri();
+                  });
+                },
+              );
+            }
+
+            List<Materi> materiList = snapshot.data ?? [];
+            
+            // Filter materi berdasarkan pencarian
+            if (_searchQuery.isNotEmpty) {
+              materiList = materiList.where((materi) {
+                return materi.judul.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                    materi.deskripsi.toLowerCase().contains(_searchQuery.toLowerCase());
+              }).toList();
+            }
+
+            if (materiList.isEmpty) {
+              return EmptyStateWidget(
+                title: _searchQuery.isNotEmpty 
+                    ? 'Materi Tidak Ditemukan' 
+                    : 'Belum Ada Materi',
+                subtitle: _searchQuery.isNotEmpty
+                    ? 'Tidak ada materi yang sesuai dengan pencarian "${_searchQuery}"'
+                    : 'Materi pembelajaran belum tersedia saat ini.',
+                icon: Icons.book,
+              );
+            }
+
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!_isSearching) ...[
+                    Text(
+                      'Pilih Materi Pembelajaran',
+                      style: AppTheme.headingSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Eksplorasi materi pembelajaran interaktif',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: AppTheme.secondaryTextColor,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                  Expanded(
+                    child: GridView.builder(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 0.75,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                      ),
+                      itemCount: materiList.length,
+                      itemBuilder: (context, index) {
+                        final materi = materiList[index];
+                        return _buildMateriCard(context, materi);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _buildMateriCard(BuildContext context, Materi materi) {
-    print('Building materi card with image URL: ${materi.gambarUrl}');
-    return AppCard(
-      onTap: () {
-        Navigator.pushNamed(
-          context,
-          AppConstants.routeMateriDetail,
-          arguments: materi,
-        );
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Gambar Materi
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: SizedBox(
-              height: 100,
-              width: double.infinity,
-              child: materi.gambarUrl.isNotEmpty
-                  ? CachedNetworkImage(
-                      imageUrl: materi.gambarUrl,
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) => Container(
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Material(
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        color: Colors.white,
+        child: InkWell(
+          onTap: () {
+            Navigator.pushNamed(
+              context,
+              AppConstants.routeMateriDetail,
+              arguments: materi,
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Gambar Materi
+              Stack(
+                children: [
+                  AspectRatio(
+                    aspectRatio: 3/2,
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
                         color: AppTheme.primaryColorLight.withOpacity(0.2),
-                        child: Center(
-                          child: CircularProgressIndicator(
-                            color: AppTheme.primaryColor.withOpacity(0.7),
-                          ),
-                        ),
                       ),
-                      errorWidget: (context, url, error) {
-                        print("Error loading materi image: $error");
-                        return Container(
-                          color: AppTheme.primaryColorLight.withOpacity(0.2),
-                          child: const Center(
-                            child: Icon(
-                              Icons.broken_image,
-                              size: 40,
-                              color: Colors.grey,
+                      child: materi.gambarUrl.isNotEmpty
+                          ? Hero(
+                              tag: 'materi_image_${materi.id}',
+                              child: CachedNetworkImage(
+                                imageUrl: materi.gambarUrl,
+                                fit: BoxFit.cover,
+                                placeholder: (context, url) => Center(
+                                  child: CircularProgressIndicator(
+                                    color: AppTheme.primaryColor.withOpacity(0.7),
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                                errorWidget: (context, url, error) {
+                                  print("Error loading materi image: $error");
+                                  return Container(
+                                    color: AppTheme.primaryColorLight.withOpacity(0.2),
+                                    child: const Center(
+                                      child: Icon(
+                                        Icons.broken_image,
+                                        size: 30,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            )
+                          : Container(
+                              color: AppTheme.primaryColorLight.withOpacity(0.2),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.book,
+                                  size: 30,
+                                  color: AppTheme.primaryColor,
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor,
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.menu_book,
+                            color: Colors.white,
+                            size: 12,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Materi',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        );
-                      },
-                    )
-                  : Container(
-                      color: AppTheme.primaryColorLight.withOpacity(0.2),
-                      child: const Center(
-                        child: Icon(
-                          Icons.book,
-                          size: 40,
-                          color: AppTheme.primaryColor,
-                        ),
+                        ],
                       ),
                     ),
-            ),
-          ),
-          
-          // Info Materi
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    materi.judul,
-                    style: AppTheme.subtitleMedium.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    materi.deskripsi,
-                    style: AppTheme.bodySmall.copyWith(
-                      fontSize: 10,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const Spacer(),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.calendar_today,
-                        size: 10,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 2),
-                      Text(
-                        '${materi.updatedAt.day}/${materi.updatedAt.month}/${materi.updatedAt.year}',
-                        style: AppTheme.bodySmall.copyWith(
-                          color: Colors.grey,
-                          fontSize: 9,
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
-            ),
+              
+              // Info Materi
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        materi.judul,
+                        style: AppTheme.subtitleMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        materi.deskripsi,
+                        style: AppTheme.bodySmall.copyWith(
+                          color: AppTheme.secondaryTextColor,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_today,
+                            size: 12,
+                            color: Colors.grey,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${materi.updatedAt.day}/${materi.updatedAt.month}/${materi.updatedAt.year}',
+                            style: AppTheme.bodySmall.copyWith(
+                              color: Colors.grey,
+                              fontSize: 10,
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryColor.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.arrow_forward_ios,
+                              size: 12,
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-// Widget tambahan jika belum tersedia di project
 class AppErrorWidget extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
@@ -247,27 +462,20 @@ class AppErrorWidget extends StatelessWidget {
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   onPressed: onRetry,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Coba Lagi'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primaryColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
-                      vertical: 10,
+                      vertical: 12,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      Icon(Icons.refresh, size: 18),
-                      SizedBox(width: 8),
-                      Text('Coba Lagi'),
-                    ],
                   ),
                 ),
               ),
@@ -299,12 +507,19 @@ class EmptyStateWidget extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 80,
-              color: Colors.grey[400],
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 60,
+                color: AppTheme.primaryColor,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24),
             Text(
               title,
               style: AppTheme.headingMedium,
@@ -313,7 +528,7 @@ class EmptyStateWidget extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               subtitle,
-              style: AppTheme.bodyMedium.copyWith(color: Colors.grey[600]),
+              style: AppTheme.bodyMedium.copyWith(color: AppTheme.secondaryTextColor),
               textAlign: TextAlign.center,
             ),
           ],
