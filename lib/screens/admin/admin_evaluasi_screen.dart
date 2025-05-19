@@ -19,64 +19,174 @@ class _AdminEvaluasiScreenState extends State<AdminEvaluasiScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kelola Evaluasi'),
-        centerTitle: true,
-        backgroundColor: AppTheme.successColor,
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.pushNamed(
-                context,
-                AppConstants.routeAdminEvaluasiForm,
-              ).then((_) => setState(() {}));
-            },
-            icon: const Icon(Icons.add),
-            tooltip: 'Tambah Evaluasi',
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const LoadingWidget(message: 'Memuat data evaluasi...')
-          : StreamBuilder<List<Evaluasi>>(
-              stream: _firebaseService.getEvaluasi(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const LoadingWidget(
-                      message: 'Memuat data evaluasi...');
-                }
-
-                if (snapshot.hasError) {
-                  return AppErrorWidget(
-                    message: 'Terjadi kesalahan: ${snapshot.error}',
-                    onRetry: () {
-                      setState(() {});
-                    },
-                  );
-                }
-
-                final List<Evaluasi> evaluasiList = snapshot.data ?? [];
-
-                if (evaluasiList.isEmpty) {
-                  return const EmptyStateWidget(
-                    title: 'Belum Ada Evaluasi',
-                    subtitle:
-                        'Tambahkan evaluasi pembelajaran untuk ditampilkan pada aplikasi.',
-                    icon: Icons.assignment,
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: evaluasiList.length,
-                  itemBuilder: (context, index) {
-                    final evaluasi = evaluasiList[index];
-                    return _buildEvaluasiItem(context, evaluasi);
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              expandedHeight: 180.0,
+              floating: false,
+              pinned: true,
+              backgroundColor: AppTheme.successColor,
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    Navigator.pushNamed(
+                      context,
+                      AppConstants.routeAdminEvaluasiForm,
+                    ).then((_) => setState(() {}));
                   },
-                );
-              },
+                  icon: const Icon(Icons.add),
+                  tooltip: 'Tambah Evaluasi',
+                ),
+              ],
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text(
+                  'Kelola Evaluasi',
+                  style: AppTheme.subtitleLarge.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 5,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                ),
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppTheme.successColor,
+                        const Color(0xFF004D40), // Darker shade of success color
+                      ],
+                    ),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: -30,
+                        top: -30,
+                        child: Container(
+                          width: 160,
+                          height: 160,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: -40,
+                        bottom: -40,
+                        child: Container(
+                          width: 180,
+                          height: 180,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Align(
+                          alignment: Alignment.bottomLeft,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.assignment,
+                                color: Colors.white,
+                                size: 36,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Kelola Evaluasi dan Soal',
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                              const SizedBox(height: 50), // Space for title
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-      floatingActionButton: FloatingActionButton(
+          ];
+        },
+        body: _isLoading
+            ? const LoadingWidget(message: 'Memuat data evaluasi...')
+            : StreamBuilder<List<Evaluasi>>(
+                stream: _firebaseService.getEvaluasi(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const LoadingWidget(
+                        message: 'Memuat data evaluasi...');
+                  }
+
+                  if (snapshot.hasError) {
+                    return AppErrorWidget(
+                      message: 'Terjadi kesalahan: ${snapshot.error}',
+                      onRetry: () {
+                        setState(() {});
+                      },
+                    );
+                  }
+
+                  final List<Evaluasi> evaluasiList = snapshot.data ?? [];
+
+                  if (evaluasiList.isEmpty) {
+                    return const EmptyStateWidget(
+                      title: 'Belum Ada Evaluasi',
+                      subtitle:
+                          'Tambahkan evaluasi pembelajaran untuk ditampilkan pada aplikasi.',
+                      icon: Icons.assignment,
+                    );
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Daftar Evaluasi Pembelajaran',
+                          style: AppTheme.headingSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Kelola dan tambahkan evaluasi pembelajaran baru',
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: AppTheme.secondaryTextColor,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Expanded(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 80),
+                            itemCount: evaluasiList.length,
+                            itemBuilder: (context, index) {
+                              final evaluasi = evaluasiList[index];
+                              return _buildEvaluasiItem(context, evaluasi);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.pushNamed(
             context,
@@ -84,129 +194,146 @@ class _AdminEvaluasiScreenState extends State<AdminEvaluasiScreen> {
           ).then((_) => setState(() {}));
         },
         backgroundColor: AppTheme.successColor,
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('Tambah Evaluasi'),
       ),
     );
   }
 
   Widget _buildEvaluasiItem(BuildContext context, Evaluasi evaluasi) {
-    return Card(
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.successColor.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Icon
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.successColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.assignment,
-                    color: AppTheme.successColor,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        evaluasi.judul,
-                        style: AppTheme.subtitleLarge.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        evaluasi.deskripsi,
-                        style: AppTheme.bodyMedium,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            // Info Tambahan
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoItem(
-                    'Jumlah Soal',
-                    '${evaluasi.soalIds.length}',
-                    Icons.question_answer,
+                  // Icon
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.successColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.assignment,
+                      color: AppTheme.successColor,
+                      size: 32,
+                    ),
                   ),
-                  _buildInfoItem(
-                    'Dibuat',
-                    _formatDate(evaluasi.createdAt),
-                    Icons.calendar_today,
-                  ),
-                  _buildInfoItem(
-                    'Diperbarui',
-                    _formatDate(evaluasi.updatedAt),
-                    Icons.update,
+                  const SizedBox(width: 16),
+                  // Info Evaluasi
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          evaluasi.judul,
+                          style: AppTheme.subtitleLarge.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          evaluasi.deskripsi,
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: AppTheme.secondaryTextColor,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 16),
-            // Actions
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppConstants.routeAdminEvaluasiForm,
-                        arguments: evaluasi,
-                      ).then((_) => setState(() {}));
-                    },
-                    icon: const Icon(Icons.edit),
-                    label: const Text('Edit'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.successColor,
-                      side: const BorderSide(color: AppTheme.successColor),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+              const SizedBox(height: 16),
+              // Info tambahan
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildInfoItem(
+                      'Jumlah Soal',
+                      '${evaluasi.soalIds.length}',
+                      Icons.question_answer,
+                    ),
+                    _buildInfoItem(
+                      'Dibuat',
+                      _formatDate(evaluasi.createdAt),
+                      Icons.calendar_today,
+                    ),
+                    _buildInfoItem(
+                      'Diperbarui',
+                      _formatDate(evaluasi.updatedAt),
+                      Icons.update,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 8),
+              // Tombol Aksi
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppConstants.routeAdminEvaluasiForm,
+                          arguments: evaluasi,
+                        ).then((_) => setState(() {}));
+                      },
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Edit'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.successColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _showDeleteConfirmation(context, evaluasi),
-                    icon: const Icon(Icons.delete),
-                    label: const Text('Hapus'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.errorColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _showDeleteConfirmation(context, evaluasi),
+                      icon: const Icon(Icons.delete),
+                      label: const Text('Hapus'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.errorColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -215,7 +342,7 @@ class _AdminEvaluasiScreenState extends State<AdminEvaluasiScreen> {
   Widget _buildInfoItem(String label, String value, IconData icon) {
     return Column(
       children: [
-        Icon(icon, size: 16, color: Colors.grey),
+        Icon(icon, size: 20, color: AppTheme.successColor),
         const SizedBox(height: 4),
         Text(
           label,
@@ -282,6 +409,9 @@ class _AdminEvaluasiScreenState extends State<AdminEvaluasiScreen> {
             backgroundColor: AppTheme.successColor,
           ),
         );
+        setState(() {
+          _isLoading = false;
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -291,9 +421,6 @@ class _AdminEvaluasiScreenState extends State<AdminEvaluasiScreen> {
             backgroundColor: AppTheme.errorColor,
           ),
         );
-      }
-    } finally {
-      if (mounted) {
         setState(() {
           _isLoading = false;
         });
@@ -302,6 +429,10 @@ class _AdminEvaluasiScreenState extends State<AdminEvaluasiScreen> {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }

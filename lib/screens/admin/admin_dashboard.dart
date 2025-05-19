@@ -3,7 +3,6 @@ import 'package:pembelajaran_app/config/constants.dart';
 import 'package:pembelajaran_app/config/theme.dart';
 import 'package:pembelajaran_app/services/firebase_service.dart';
 import 'package:pembelajaran_app/widgets/app_button.dart';
-import 'package:pembelajaran_app/widgets/app_card.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({Key? key}) : super(key: key);
@@ -11,146 +10,194 @@ class AdminDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Admin Dashboard'),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.primaryColor.withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              expandedHeight: 180.0,
+              floating: false,
+              pinned: true,
+              backgroundColor: AppTheme.primaryColor,
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text(
+                  'Admin Dashboard',
+                  style: AppTheme.subtitleLarge.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 5,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.admin_panel_settings,
-                        color: Colors.white,
-                        size: 36,
-                      ),
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppTheme.primaryColor,
+                        AppTheme.primaryColorDark,
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Selamat Datang, Admin!',
-                            style: AppTheme.headingSmall.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: -30,
+                        top: -30,
+                        child: Container(
+                          width: 160,
+                          height: 160,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Kelola konten aplikasi media pembelajaran',
-                            style: AppTheme.bodyMedium.copyWith(
-                              color: Colors.white.withOpacity(0.8),
-                            ),
+                        ),
+                      ),
+                      Positioned(
+                        left: -40,
+                        bottom: -40,
+                        child: Container(
+                          width: 180,
+                          height: 180,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Align(
+                          alignment: Alignment.bottomLeft,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.admin_panel_settings,
+                                color: Colors.white,
+                                size: 36,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Kelola Konten Aplikasi',
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                              const SizedBox(height: 50), // Space for title
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 32),
-
-              // Menu Admin
-              Text(
-                'Manajemen Konten',
-                style: AppTheme.headingMedium,
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  children: [
-                    _buildMenuCard(
-                      context,
-                      'Materi Pembelajaran',
-                      Icons.book,
-                      AppTheme.primaryColor,
-                      () => Navigator.pushNamed(
-                        context,
-                        AppConstants.routeAdminMateri,
-                      ),
-                    ),
-                    _buildMenuCard(
-                      context,
-                      'Video Pembelajaran',
-                      Icons.video_library,
-                      AppTheme.accentColor,
-                      () => Navigator.pushNamed(
-                        context,
-                        AppConstants.routeAdminVideo,
-                      ),
-                    ),
-                    _buildMenuCard(
-                      context,
-                      'Evaluasi Pembelajaran',
-                      Icons.assignment,
-                      AppTheme.successColor,
-                      () => Navigator.pushNamed(
-                        context,
-                        AppConstants.routeAdminEvaluasi,
-                      ),
-                    ),
-                    _buildMenuCard(
-                      context,
-                      'Identitas Pengembang',
-                      Icons.person,
-                      Colors.purple,
-                      () => Navigator.pushNamed(
-                        context,
-                        AppConstants.routeAdminIdentitas,
-                      ),
-                    ),
-                    _buildMenuCard(
-                      context,
-                      'Ubah Password',
-                      Icons.lock,
-                      Colors.deepPurple,
-                      () => _showChangePasswordDialog(context),
-                    ),
-                  ],
+            ),
+          ];
+        },
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Manajemen Konten',
+                  style: AppTheme.headingSmall,
                 ),
-              ),
-              
-              // Tombol Kembali
-              AppButton(
-                text: 'Kembali ke Aplikasi',
-                icon: Icons.arrow_back,
-                type: ButtonType.outlined,
-                onPressed: () => Navigator.pushReplacementNamed(
-                  context,
-                  AppConstants.routeHome,
+                const SizedBox(height: 8),
+                Text(
+                  'Pilih menu untuk mengelola konten aplikasi',
+                  style: AppTheme.bodyMedium.copyWith(
+                    color: AppTheme.secondaryTextColor,
+                  ),
                 ),
-                isFullWidth: true,
-              ),
-            ],
+                const SizedBox(height: 24),
+                
+                // Menu Grid
+                Expanded(
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 0.85,
+                    children: [
+                      _buildMenuCard(
+                        context,
+                        'Materi Pembelajaran',
+                        'Kelola konten materi pembelajaran',
+                        Icons.book,
+                        AppTheme.primaryColor,
+                        () => Navigator.pushNamed(
+                          context,
+                          AppConstants.routeAdminMateri,
+                        ),
+                      ),
+                      _buildMenuCard(
+                        context,
+                        'Video Pembelajaran',
+                        'Kelola konten video tutorial',
+                        Icons.video_library,
+                        AppTheme.accentColor,
+                        () => Navigator.pushNamed(
+                          context,
+                          AppConstants.routeAdminVideo,
+                        ),
+                      ),
+                      _buildMenuCard(
+                        context,
+                        'Evaluasi Pembelajaran',
+                        'Kelola soal dan kuis evaluasi',
+                        Icons.assignment,
+                        AppTheme.successColor,
+                        () => Navigator.pushNamed(
+                          context,
+                          AppConstants.routeAdminEvaluasi,
+                        ),
+                      ),
+                      _buildMenuCard(
+                        context,
+                        'Identitas Pengembang',
+                        'Kelola informasi pengembang aplikasi',
+                        Icons.person,
+                        Colors.purple,
+                        () => Navigator.pushNamed(
+                          context,
+                          AppConstants.routeAdminIdentitas,
+                        ),
+                      ),
+                      _buildMenuCard(
+                        context,
+                        'Ubah Password',
+                        'Ganti password admin',
+                        Icons.lock,
+                        Colors.deepPurple,
+                        () => _showChangePasswordDialog(context),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Tombol Kembali
+                AppButton(
+                  text: 'Kembali ke Aplikasi',
+                  icon: Icons.arrow_back,
+                  type: ButtonType.outlined,
+                  onPressed: () => Navigator.pushReplacementNamed(
+                    context,
+                    AppConstants.routeHome,
+                  ),
+                  isFullWidth: true,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -160,50 +207,68 @@ class AdminDashboard extends StatelessWidget {
   Widget _buildMenuCard(
     BuildContext context,
     String title,
+    String description,
     IconData icon,
     Color color,
     VoidCallback onTap,
   ) {
-    return AppCard(
-      onTap: onTap,
-      padding: EdgeInsets.zero,
-      elevation: 3,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 2,
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: color.withOpacity(0.1),
-              ),
-              child: Icon(
-                icon,
-                size: 40,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Text(
-                title,
-                style: AppTheme.subtitleMedium.copyWith(
-                  fontWeight: FontWeight.bold,
+        ],
+      ),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 42,
+                    color: color,
+                  ),
                 ),
-                textAlign: TextAlign.center,
-              ),
+                const SizedBox(height: 16),
+                Text(
+                  title,
+                  style: AppTheme.subtitleMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  description,
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.secondaryTextColor,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

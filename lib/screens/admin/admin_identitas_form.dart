@@ -136,30 +136,83 @@ class _AdminIdentitasFormState extends State<AdminIdentitasForm> {
   void _showImagePickerOptions(int personType) {
     showModalBottomSheet(
       context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (BuildContext context) {
         return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Pilih dari Galeri'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.gallery, personType);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_camera),
-                title: const Text('Ambil Foto'),
-                onTap: () {
-                  Navigator.pop(context);
-                  _pickImage(ImageSource.camera, personType);
-                },
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Pilih Sumber Foto',
+                  style: AppTheme.subtitleLarge,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildImageSourceOption(
+                      icon: Icons.photo_library,
+                      label: 'Galeri',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickImage(ImageSource.gallery, personType);
+                      },
+                    ),
+                    _buildImageSourceOption(
+                      icon: Icons.camera_alt,
+                      label: 'Kamera',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _pickImage(ImageSource.camera, personType);
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildImageSourceOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 32,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: AppTheme.bodyMedium,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -240,246 +293,339 @@ class _AdminIdentitasFormState extends State<AdminIdentitasForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Kelola Identitas'),
-        centerTitle: true,
-      ),
-      body: _isLoading
-          ? const LoadingWidget(message: 'Memuat data...')
-          : Form(
-              key: _formKey,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Form Header
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppTheme.primaryColor.withOpacity(0.3),
-                        ),
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              expandedHeight: 180.0,
+              floating: false,
+              pinned: true,
+              backgroundColor: Colors.purple,
+              flexibleSpace: FlexibleSpaceBar(
+                title: Text(
+                  'Kelola Identitas',
+                  style: AppTheme.subtitleLarge.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.3),
+                        blurRadius: 5,
+                        offset: const Offset(0, 2),
                       ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.person,
-                            color: AppTheme.primaryColor,
-                            size: 24,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Kelola informasi identitas pengembang aplikasi',
-                              style: AppTheme.bodyMedium.copyWith(
-                                color: AppTheme.primaryColor,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    // === MAHASISWA ===
-                    Text(
-                      'Identitas Mahasiswa',
-                      style: AppTheme.headingSmall,
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Foto Mahasiswa
-                    _buildImagePicker(
-                      label: 'Foto Mahasiswa',
-                      imageUrl: _fotoMahasiswaUrl,
-                      imageFile: _fotoMahasiswaFile,
-                      onTap: () => _showImagePickerOptions(1),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Nama Mahasiswa
-                    TextFormField(
-                      controller: _namaMahasiswaController,
-                      decoration: const InputDecoration(
-                        labelText: 'Nama Mahasiswa',
-                        prefixIcon: Icon(Icons.person),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Nama mahasiswa tidak boleh kosong';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // NIM Mahasiswa
-                    TextFormField(
-                      controller: _nimMahasiswaController,
-                      decoration: const InputDecoration(
-                        labelText: 'NIM Mahasiswa',
-                        prefixIcon: Icon(Icons.badge),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'NIM mahasiswa tidak boleh kosong';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Program Studi
-                    TextFormField(
-                      controller: _prodiMahasiswaController,
-                      decoration: const InputDecoration(
-                        labelText: 'Program Studi',
-                        prefixIcon: Icon(Icons.school),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Program studi tidak boleh kosong';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 32),
-                    
-                    // === DOSEN PEMBIMBING 1 ===
-                    Text(
-                      'Identitas Dosen Pembimbing 1',
-                      style: AppTheme.headingSmall,
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Foto Dosen Pembimbing 1
-                    _buildImagePicker(
-                      label: 'Foto Dosen Pembimbing 1',
-                      imageUrl: _fotoDospem1Url,
-                      imageFile: _fotoDospem1File,
-                      onTap: () => _showImagePickerOptions(2),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // Nama Dosen Pembimbing 1
-                    TextFormField(
-                      controller: _namaDospem1Controller,
-                      decoration: const InputDecoration(
-                        labelText: 'Nama Dosen Pembimbing 1',
-                        prefixIcon: Icon(Icons.person),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Nama dosen pembimbing 1 tidak boleh kosong';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    // NIP Dosen Pembimbing 1
-                    TextFormField(
-                      controller: _nipDospem1Controller,
-                      decoration: const InputDecoration(
-                        labelText: 'NIP Dosen Pembimbing 1',
-                        prefixIcon: Icon(Icons.badge),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'NIP dosen pembimbing 1 tidak boleh kosong';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 32),
-                    
-                    // === DOSEN PEMBIMBING 2 ===
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Identitas Dosen Pembimbing 2',
-                          style: AppTheme.headingSmall,
-                        ),
-                        Switch(
-                          value: _hasDospem2,
-                          onChanged: (value) {
-                            setState(() {
-                              _hasDospem2 = value;
-                            });
-                          },
-                          activeColor: AppTheme.primaryColor,
-                        ),
+                    ],
+                  ),
+                ),
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.purple,
+                        Colors.deepPurple,
                       ],
                     ),
-                    Text(
-                      _hasDospem2
-                          ? 'Aktif'
-                          : 'Tidak ada dosen pembimbing 2',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: _hasDospem2 ? AppTheme.successColor : Colors.grey,
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        right: -30,
+                        top: -30,
+                        child: Container(
+                          width: 160,
+                          height: 160,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    
-                    if (_hasDospem2) ...[
-                      // Foto Dosen Pembimbing 2
-                      _buildImagePicker(
-                        label: 'Foto Dosen Pembimbing 2',
-                        imageUrl: _fotoDospem2Url ?? '',
-                        imageFile: _fotoDospem2File,
-                        onTap: () => _showImagePickerOptions(3),
+                      Positioned(
+                        left: -40,
+                        bottom: -40,
+                        child: Container(
+                          width: 180,
+                          height: 180,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Align(
+                          alignment: Alignment.bottomLeft,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.people_alt_rounded,
+                                color: Colors.white,
+                                size: 36,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Kelola Informasi Pengembang',
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                              const SizedBox(height: 50), // Space for title
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ];
+        },
+        body: _isLoading
+            ? const LoadingWidget(message: 'Memuat data...')
+            : Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Form Header
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.purple.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.person,
+                              color: Colors.purple,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Kelola informasi identitas pengembang aplikasi',
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: Colors.purple,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // === MAHASISWA ===
+                      Text(
+                        'Identitas Mahasiswa',
+                        style: AppTheme.headingSmall,
                       ),
                       const SizedBox(height: 16),
                       
-                      // Nama Dosen Pembimbing 2
+                      // Foto Mahasiswa
+                      _buildImagePicker(
+                        label: 'Foto Mahasiswa',
+                        imageUrl: _fotoMahasiswaUrl,
+                        imageFile: _fotoMahasiswaFile,
+                        onTap: () => _showImagePickerOptions(1),
+                        color: Colors.purple,
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Nama Mahasiswa
                       TextFormField(
-                        controller: _namaDospem2Controller,
+                        controller: _namaMahasiswaController,
                         decoration: const InputDecoration(
-                          labelText: 'Nama Dosen Pembimbing 2',
+                          labelText: 'Nama Mahasiswa',
                           prefixIcon: Icon(Icons.person),
                         ),
                         validator: (value) {
-                          if (_hasDospem2 && (value == null || value.isEmpty)) {
-                            return 'Nama dosen pembimbing 2 tidak boleh kosong';
+                          if (value == null || value.isEmpty) {
+                            return 'Nama mahasiswa tidak boleh kosong';
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 16),
                       
-                      // NIP Dosen Pembimbing 2
+                      // NIM Mahasiswa
                       TextFormField(
-                        controller: _nipDospem2Controller,
+                        controller: _nimMahasiswaController,
                         decoration: const InputDecoration(
-                          labelText: 'NIP Dosen Pembimbing 2',
+                          labelText: 'NIM Mahasiswa',
                           prefixIcon: Icon(Icons.badge),
                         ),
                         validator: (value) {
-                          if (_hasDospem2 && (value == null || value.isEmpty)) {
-                            return 'NIP dosen pembimbing 2 tidak boleh kosong';
+                          if (value == null || value.isEmpty) {
+                            return 'NIM mahasiswa tidak boleh kosong';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Program Studi
+                      TextFormField(
+                        controller: _prodiMahasiswaController,
+                        decoration: const InputDecoration(
+                          labelText: 'Program Studi',
+                          prefixIcon: Icon(Icons.school),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Program studi tidak boleh kosong';
                           }
                           return null;
                         },
                       ),
                       const SizedBox(height: 32),
+                      
+                      // === DOSEN PEMBIMBING 1 ===
+                      Text(
+                        'Identitas Dosen Pembimbing 1',
+                        style: AppTheme.headingSmall,
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Foto Dosen Pembimbing 1
+                      _buildImagePicker(
+                        label: 'Foto Dosen Pembimbing 1',
+                        imageUrl: _fotoDospem1Url,
+                        imageFile: _fotoDospem1File,
+                        onTap: () => _showImagePickerOptions(2),
+                        color: Colors.blue,
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Nama Dosen Pembimbing 1
+                      TextFormField(
+                        controller: _namaDospem1Controller,
+                        decoration: const InputDecoration(
+                          labelText: 'Nama Dosen Pembimbing 1',
+                          prefixIcon: Icon(Icons.person),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Nama dosen pembimbing 1 tidak boleh kosong';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // NIP Dosen Pembimbing 1
+                      TextFormField(
+                        controller: _nipDospem1Controller,
+                        decoration: const InputDecoration(
+                          labelText: 'NIP Dosen Pembimbing 1',
+                          prefixIcon: Icon(Icons.badge),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'NIP dosen pembimbing 1 tidak boleh kosong';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 32),
+                      
+                      // === DOSEN PEMBIMBING 2 ===
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Identitas Dosen Pembimbing 2',
+                            style: AppTheme.headingSmall,
+                          ),
+                          Switch(
+                            value: _hasDospem2,
+                            onChanged: (value) {
+                              setState(() {
+                                _hasDospem2 = value;
+                              });
+                            },
+                            activeColor: Colors.teal,
+                          ),
+                        ],
+                      ),
+                      Text(
+                        _hasDospem2
+                            ? 'Aktif'
+                            : 'Tidak ada dosen pembimbing 2',
+                        style: AppTheme.bodySmall.copyWith(
+                          color: _hasDospem2 ? Colors.teal : Colors.grey,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      if (_hasDospem2) ...[
+                        // Foto Dosen Pembimbing 2
+                        _buildImagePicker(
+                          label: 'Foto Dosen Pembimbing 2',
+                          imageUrl: _fotoDospem2Url ?? '',
+                          imageFile: _fotoDospem2File,
+                          onTap: () => _showImagePickerOptions(3),
+                          color: Colors.teal,
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // Nama Dosen Pembimbing 2
+                        TextFormField(
+                          controller: _namaDospem2Controller,
+                          decoration: const InputDecoration(
+                            labelText: 'Nama Dosen Pembimbing 2',
+                            prefixIcon: Icon(Icons.person),
+                          ),
+                          validator: (value) {
+                            if (_hasDospem2 && (value == null || value.isEmpty)) {
+                              return 'Nama dosen pembimbing 2 tidak boleh kosong';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        
+                        // NIP Dosen Pembimbing 2
+                        TextFormField(
+                          controller: _nipDospem2Controller,
+                          decoration: const InputDecoration(
+                            labelText: 'NIP Dosen Pembimbing 2',
+                            prefixIcon: Icon(Icons.badge),
+                          ),
+                          validator: (value) {
+                            if (_hasDospem2 && (value == null || value.isEmpty)) {
+                              return 'NIP dosen pembimbing 2 tidak boleh kosong';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 32),
+                      ],
+                      
+                      // Tombol Simpan
+                      AppButton(
+                        text: 'Simpan Identitas',
+                        icon: Icons.save,
+                        onPressed: _saveIdentitas,
+                        isLoading: _isLoading,
+                        isFullWidth: true,
+                      ),
+                      const SizedBox(height: 40),
                     ],
-                    
-                    // Tombol Simpan
-                    AppButton(
-                      text: 'Simpan Identitas',
-                      icon: Icons.save,
-                      onPressed: _saveIdentitas,
-                      isLoading: _isLoading,
-                      isFullWidth: true,
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
@@ -488,6 +634,7 @@ class _AdminIdentitasFormState extends State<AdminIdentitasForm> {
     required String imageUrl,
     required File? imageFile,
     required VoidCallback onTap,
+    required Color color,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -496,24 +643,27 @@ class _AdminIdentitasFormState extends State<AdminIdentitasForm> {
           label,
           style: AppTheme.subtitleMedium.copyWith(
             fontWeight: FontWeight.bold,
+            color: color,
           ),
         ),
         const SizedBox(height: 8),
         InkWell(
           onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
           child: Container(
             height: 180,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+              color: color.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Colors.grey.withOpacity(0.3),
+                color: color.withOpacity(0.3),
+                width: 2,
               ),
             ),
             child: imageFile != null
                 ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                     child: Image.file(
                       imageFile,
                       fit: BoxFit.cover,
@@ -521,7 +671,7 @@ class _AdminIdentitasFormState extends State<AdminIdentitasForm> {
                   )
                 : imageUrl.isNotEmpty
                     ? ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(14),
                         child: CachedNetworkImage(
                           imageUrl: imageUrl,
                           fit: BoxFit.cover,
@@ -530,11 +680,23 @@ class _AdminIdentitasFormState extends State<AdminIdentitasForm> {
                           ),
                           errorWidget: (context, url, error) {
                             print("Error loading image: $error");
-                            return const Center(
-                              child: Icon(
-                                Icons.broken_image,
-                                size: 48,
-                                color: Colors.grey,
+                            return Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.broken_image,
+                                    size: 48,
+                                    color: color.withOpacity(0.7),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Gambar tidak dapat dimuat',
+                                    style: AppTheme.bodyMedium.copyWith(
+                                      color: color.withOpacity(0.7),
+                                    ),
+                                  ),
+                                ],
                               ),
                             );
                           },
@@ -544,16 +706,16 @@ class _AdminIdentitasFormState extends State<AdminIdentitasForm> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
-                              Icons.person_add,
+                            Icon(
+                              Icons.add_photo_alternate,
                               size: 48,
-                              color: Colors.grey,
+                              color: color.withOpacity(0.7),
                             ),
                             const SizedBox(height: 8),
                             Text(
                               'Tap untuk memilih foto',
                               style: AppTheme.bodyMedium.copyWith(
-                                color: Colors.grey,
+                                color: color.withOpacity(0.7),
                               ),
                             ),
                           ],
@@ -563,15 +725,12 @@ class _AdminIdentitasFormState extends State<AdminIdentitasForm> {
         ),
         const SizedBox(height: 8),
         if (imageFile != null || imageUrl.isNotEmpty)
-          ElevatedButton.icon(
+          AppButton(
+            text: 'Ganti Foto',
+            icon: Icons.photo_camera,
+            type: ButtonType.outlined,
             onPressed: onTap,
-            icon: const Icon(Icons.photo_camera),
-            label: const Text('Ganti Foto'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            ),
+            isFullWidth: true,
           ),
       ],
     );
