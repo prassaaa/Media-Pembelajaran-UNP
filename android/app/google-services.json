@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "627873270011",
+    "project_id": "pemeblajaran-unp",
+    "storage_bucket": "pemeblajaran-unp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:627873270011:android:f6e95a4a3ec3b5945b485e",
+        "android_client_info": {
+          "package_name": "com.example.pembelajaran_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANH-gKegI-wMYb5wS9WBm3gdNYqqQSVWE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
