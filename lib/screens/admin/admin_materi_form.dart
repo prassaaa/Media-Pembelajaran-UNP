@@ -22,6 +22,8 @@ class _AdminMateriFormState extends State<AdminMateriForm> {
 
   final TextEditingController _judulController = TextEditingController();
   final TextEditingController _deskripsiController = TextEditingController();
+  final TextEditingController _capaianPembelajaranController = TextEditingController(); // Controller baru
+  final TextEditingController _tujuanPembelajaranController = TextEditingController();  // Controller baru
   final TextEditingController _kontenController = TextEditingController();
 
   bool _isEditMode = false;
@@ -41,6 +43,8 @@ class _AdminMateriFormState extends State<AdminMateriForm> {
       _materiId = args.id;
       _judulController.text = args.judul;
       _deskripsiController.text = args.deskripsi;
+      _capaianPembelajaranController.text = args.capaianPembelajaran; // Set nilai baru
+      _tujuanPembelajaranController.text = args.tujuanPembelajaran;   // Set nilai baru
       _kontenController.text = args.konten;
       _gambarUrl = args.gambarUrl;
     }
@@ -50,6 +54,8 @@ class _AdminMateriFormState extends State<AdminMateriForm> {
   void dispose() {
     _judulController.dispose();
     _deskripsiController.dispose();
+    _capaianPembelajaranController.dispose(); // Dispose controller baru
+    _tujuanPembelajaranController.dispose();  // Dispose controller baru
     _kontenController.dispose();
     super.dispose();
   }
@@ -159,6 +165,8 @@ class _AdminMateriFormState extends State<AdminMateriForm> {
     try {
       final judul = _judulController.text;
       final deskripsi = _deskripsiController.text;
+      final capaianPembelajaran = _capaianPembelajaranController.text; // Nilai baru
+      final tujuanPembelajaran = _tujuanPembelajaranController.text;   // Nilai baru
       final konten = _kontenController.text;
 
       if (_isEditMode) {
@@ -169,6 +177,8 @@ class _AdminMateriFormState extends State<AdminMateriForm> {
           deskripsi: deskripsi,
           gambarUrl: _gambarUrl,
           konten: konten,
+          capaianPembelajaran: capaianPembelajaran, // Field baru
+          tujuanPembelajaran: tujuanPembelajaran,   // Field baru
           createdAt: DateTime.now(), // Will be ignored on update
           updatedAt: DateTime.now(),
         );
@@ -192,6 +202,8 @@ class _AdminMateriFormState extends State<AdminMateriForm> {
           deskripsi: deskripsi,
           gambarUrl: '',
           konten: konten,
+          capaianPembelajaran: capaianPembelajaran, // Field baru
+          tujuanPembelajaran: tujuanPembelajaran,   // Field baru
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
@@ -383,6 +395,42 @@ class _AdminMateriFormState extends State<AdminMateriForm> {
                       ),
                       const SizedBox(height: 16),
 
+                      // Capaian Pembelajaran - Field Baru
+                      TextFormField(
+                        controller: _capaianPembelajaranController,
+                        decoration: const InputDecoration(
+                          labelText: 'Capaian Pembelajaran',
+                          hintText: 'Contoh:\n1. Peserta didik mampu menjelaskan konsep dasar\n2. Peserta didik dapat mengidentifikasi...\n\nAtau gunakan:\n- Poin pertama\n- Poin kedua',
+                          prefixIcon: Icon(Icons.flag_outlined),
+                        ),
+                        maxLines: 4,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Capaian pembelajaran tidak boleh kosong';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Tujuan Pembelajaran - Field Baru
+                      TextFormField(
+                        controller: _tujuanPembelajaranController,
+                        decoration: const InputDecoration(
+                          labelText: 'Tujuan Pembelajaran',
+                          hintText: 'Contoh:\n1. Setelah mengikuti pembelajaran, peserta didik mampu...\n2. Peserta didik dapat mendemonstrasikan...\n\nGunakan format bernomor atau bullet point',
+                          prefixIcon: Icon(Icons.track_changes_outlined),
+                        ),
+                        maxLines: 4,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Tujuan pembelajaran tidak boleh kosong';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
                       // Deskripsi Materi
                       TextFormField(
                         controller: _deskripsiController,
@@ -500,11 +548,24 @@ class _AdminMateriFormState extends State<AdminMateriForm> {
                       const SizedBox(height: 24),
 
                       // Konten Materi
-                      Text(
-                        'Konten Materi',
-                        style: AppTheme.subtitleMedium.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Konten Materi',
+                            style: AppTheme.subtitleMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextButton.icon(
+                            onPressed: () => _showFormattingGuide(context),
+                            icon: const Icon(Icons.help_outline, size: 16),
+                            label: const Text('Format Teks', style: TextStyle(fontSize: 12)),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppTheme.primaryColor,
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       Container(
@@ -522,7 +583,7 @@ class _AdminMateriFormState extends State<AdminMateriForm> {
                         child: TextFormField(
                           controller: _kontenController,
                           decoration: InputDecoration(
-                            hintText: 'Masukkan konten materi pembelajaran',
+                            hintText: 'Masukkan konten materi pembelajaran\n\nTips: Gunakan format berikut untuk tampilan yang lebih baik:\n• # untuk judul besar\n• ## untuk subjudul\n• - atau * untuk poin\n• **teks** untuk huruf tebal\n• > untuk kutipan penting',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide(
@@ -568,6 +629,94 @@ class _AdminMateriFormState extends State<AdminMateriForm> {
                   ),
                 ),
               ),
+      ),
+    );
+  }
+
+  void _showFormattingGuide(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.format_list_bulleted, color: AppTheme.primaryColor),
+              const SizedBox(width: 8),
+              const Text('Panduan Format Teks'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildFormatExample('# Judul Besar', 'Untuk membuat judul utama'),
+                _buildFormatExample('## Sub Judul', 'Untuk membuat sub judul'),
+                _buildFormatExample('### Judul Kecil', 'Untuk membuat judul bagian'),
+                _buildFormatExample('- Poin 1\n- Poin 2', 'Untuk membuat daftar poin'),
+                _buildFormatExample('1. Nomor 1\n2. Nomor 2', 'Untuk membuat daftar bernomor'),
+                _buildFormatExample('**Teks Tebal**', 'Untuk membuat teks tebal'),
+                _buildFormatExample('> Kutipan penting', 'Untuk membuat kutipan/highlight'),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Tips: Pisahkan paragraf dengan enter untuk hasil yang lebih rapi',
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.primaryColor,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Mengerti'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildFormatExample(String format, String description) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              format,
+              style: AppTheme.bodySmall.copyWith(
+                fontFamily: 'monospace',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            style: AppTheme.bodySmall.copyWith(
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
       ),
     );
   }

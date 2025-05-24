@@ -6,6 +6,8 @@ class Materi {
   final String deskripsi;
   final String gambarUrl;
   final String konten;
+  final String capaianPembelajaran; // Field baru
+  final String tujuanPembelajaran;  // Field baru
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -15,6 +17,8 @@ class Materi {
     required this.deskripsi,
     required this.gambarUrl,
     required this.konten,
+    required this.capaianPembelajaran, // Field baru
+    required this.tujuanPembelajaran,  // Field baru
     required this.createdAt,
     required this.updatedAt,
   });
@@ -26,6 +30,8 @@ class Materi {
       deskripsi: map['deskripsi'] ?? '',
       gambarUrl: map['gambarUrl'] ?? '',
       konten: map['konten'] ?? '',
+      capaianPembelajaran: map['capaianPembelajaran'] ?? '', // Field baru
+      tujuanPembelajaran: map['tujuanPembelajaran'] ?? '',   // Field baru
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       updatedAt: (map['updatedAt'] as Timestamp).toDate(),
     );
@@ -37,6 +43,8 @@ class Materi {
       'deskripsi': deskripsi,
       'gambarUrl': gambarUrl,
       'konten': konten,
+      'capaianPembelajaran': capaianPembelajaran, // Field baru
+      'tujuanPembelajaran': tujuanPembelajaran,   // Field baru
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };

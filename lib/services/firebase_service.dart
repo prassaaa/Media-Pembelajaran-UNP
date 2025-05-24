@@ -54,6 +54,8 @@ class FirebaseService {
       'deskripsi': materi.deskripsi,
       'gambarUrl': gambarUrl,
       'konten': materi.konten,
+      'capaianPembelajaran': materi.capaianPembelajaran, // Field baru
+      'tujuanPembelajaran': materi.tujuanPembelajaran,   // Field baru
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
@@ -81,6 +83,8 @@ class FirebaseService {
       'deskripsi': materi.deskripsi,
       'gambarUrl': gambarUrl,
       'konten': materi.konten,
+      'capaianPembelajaran': materi.capaianPembelajaran, // Field baru
+      'tujuanPembelajaran': materi.tujuanPembelajaran,   // Field baru
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
