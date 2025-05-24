@@ -3,6 +3,19 @@ import 'package:pembelajaran_app/models/models.dart';
 import 'dart:io';
 import 'package:pembelajaran_app/services/cpanel_service.dart';
 
+// Model class untuk content images
+class ContentImage {
+  final String id;
+  final String imageUrl;
+  final File? file;
+
+  ContentImage({
+    required this.id,
+    required this.imageUrl,
+    this.file,
+  });
+}
+
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final CPanelService _cPanelService = CPanelService();
@@ -13,6 +26,9 @@ class FirebaseService {
   final CollectionReference _evaluasiCollection = FirebaseFirestore.instance.collection('evaluasi');
   final CollectionReference _soalCollection = FirebaseFirestore.instance.collection('soal');
   final CollectionReference _identitasCollection = FirebaseFirestore.instance.collection('identitas');
+
+  // Getter untuk mengakses cPanelService dari luar
+  CPanelService get cPanelService => _cPanelService;
 
   // MATERI OPERATIONS
   // Get semua materi
@@ -31,62 +47,156 @@ class FirebaseService {
     return Materi.fromMap(doc.data() as Map<String, dynamic>, doc.id);
   }
 
-  // Tambah materi baru
-  Future<void> addMateri(Materi materi, File? gambar) async {
+  // Method untuk upload multiple content images
+  Future<String> processContentImages(String content, List<ContentImage> contentImages) async {
+    String processedContent = content;
+    
+    print('Processing ${contentImages.length} content images');
+    
+    for (ContentImage contentImage in contentImages) {
+      if (contentImage.file != null) {
+        print('Uploading content image: ${contentImage.id}');
+        
+        // Upload image to cPanel
+        String? uploadedUrl = await _cPanelService.uploadImage(contentImage.file!);
+        if (uploadedUrl != null) {
+          print('Content image uploaded successfully: $uploadedUrl');
+          
+          // Replace image marker with actual URL marker
+          processedContent = processedContent.replaceAll(
+            '[IMG:${contentImage.id}]',
+            '[IMG_URL:$uploadedUrl]'
+          );
+        } else {
+          print('Failed to upload content image: ${contentImage.id}');
+          // Keep the original marker if upload fails
+        }
+      } else if (contentImage.imageUrl.isNotEmpty) {
+        // Keep existing image URL for edit mode
+        processedContent = processedContent.replaceAll(
+          '[IMG:${contentImage.id}]',
+          '[IMG_URL:${contentImage.imageUrl}]'
+        );
+      }
+    }
+    
+    print('Content processing completed');
+    return processedContent;
+  }
+
+  // Method untuk extract content images dari konten yang sudah ada (untuk edit mode)
+  List<ContentImage> extractContentImages(String content) {
+    List<ContentImage> images = [];
+    
+    // Extract existing image URLs
+    RegExp urlRegex = RegExp(r'\[IMG_URL:(.*?)\]');
+    Iterable<RegExpMatch> urlMatches = urlRegex.allMatches(content);
+    
+    int counter = 1;
+    for (RegExpMatch match in urlMatches) {
+      String imageUrl = match.group(1)!;
+      String imageId = 'existing_img_${counter++}_${DateTime.now().millisecondsSinceEpoch}';
+      
+      images.add(ContentImage(
+        id: imageId,
+        imageUrl: imageUrl,
+        file: null,
+      ));
+    }
+    
+    return images;
+  }
+
+  // Method untuk convert image URLs kembali ke markers untuk editing
+  String convertUrlsToMarkers(String content, List<ContentImage> contentImages) {
+    String convertedContent = content;
+    
+    for (ContentImage image in contentImages) {
+      if (image.imageUrl.isNotEmpty) {
+        convertedContent = convertedContent.replaceAll(
+          '[IMG_URL:${image.imageUrl}]',
+          '[IMG:${image.id}]'
+        );
+      }
+    }
+    
+    return convertedContent;
+  }
+
+  // Add materi with multiple images
+  Future<void> addMateriWithImages(Materi materi, File? gambar, List<ContentImage> contentImages) async {
     String gambarUrl = materi.gambarUrl;
 
-    // Upload gambar jika ada
+    // Upload gambar utama jika ada
     if (gambar != null) {
-      print('Uploading materi image to cPanel...');
+      print('Uploading main materi image to cPanel...');
       String? uploadedUrl = await _cPanelService.uploadImage(gambar);
       if (uploadedUrl != null) {
-        print('Materi image uploaded successfully, URL: $uploadedUrl');
+        print('Main materi image uploaded successfully, URL: $uploadedUrl');
         gambarUrl = uploadedUrl;
       } else {
-        print('Failed to upload materi image to cPanel');
+        print('Failed to upload main materi image to cPanel');
       }
     }
 
-    // Create materi with timestamp and image URL
-    print('Saving materi with image URL: $gambarUrl');
+    // Process content images
+    String processedContent = await processContentImages(materi.konten, contentImages);
+
+    // Create materi with processed content
+    print('Saving materi with processed content and image URL: $gambarUrl');
     await _materiCollection.add({
       'judul': materi.judul,
       'deskripsi': materi.deskripsi,
       'gambarUrl': gambarUrl,
-      'konten': materi.konten,
-      'capaianPembelajaran': materi.capaianPembelajaran, // Field baru
-      'tujuanPembelajaran': materi.tujuanPembelajaran,   // Field baru
+      'konten': processedContent,
+      'capaianPembelajaran': materi.capaianPembelajaran,
+      'tujuanPembelajaran': materi.tujuanPembelajaran,
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
   }
 
-  // Update materi
-  Future<void> updateMateri(Materi materi, File? gambar) async {
+  // Update materi with multiple images
+  Future<void> updateMateriWithImages(Materi materi, File? gambar, List<ContentImage> contentImages) async {
     String gambarUrl = materi.gambarUrl;
 
-    // Upload gambar baru jika ada
+    // Upload gambar utama baru jika ada
     if (gambar != null) {
-      print('Updating materi image on cPanel...');
+      print('Updating main materi image on cPanel...');
       String? uploadedUrl = await _cPanelService.uploadImage(gambar);
       if (uploadedUrl != null) {
-        print('Materi image updated successfully, URL: $uploadedUrl');
+        print('Main materi image updated successfully, URL: $uploadedUrl');
         gambarUrl = uploadedUrl;
       } else {
-        print('Failed to update materi image on cPanel');
+        print('Failed to update main materi image on cPanel');
       }
     }
 
-    print('Updating materi with image URL: $gambarUrl');
+    // Process content images
+    String processedContent = await processContentImages(materi.konten, contentImages);
+
+    print('Updating materi with processed content and image URL: $gambarUrl');
     await _materiCollection.doc(materi.id).update({
       'judul': materi.judul,
       'deskripsi': materi.deskripsi,
       'gambarUrl': gambarUrl,
-      'konten': materi.konten,
-      'capaianPembelajaran': materi.capaianPembelajaran, // Field baru
-      'tujuanPembelajaran': materi.tujuanPembelajaran,   // Field baru
+      'konten': processedContent,
+      'capaianPembelajaran': materi.capaianPembelajaran,
+      'tujuanPembelajaran': materi.tujuanPembelajaran,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  // Tambah materi baru (backward compatibility)
+  Future<void> addMateri(Materi materi, File? gambar) async {
+    // Use the new method with empty content images list
+    await addMateriWithImages(materi, gambar, []);
+  }
+
+  // Update materi (backward compatibility)
+  Future<void> updateMateri(Materi materi, File? gambar) async {
+    // Use the new method with empty content images list
+    await updateMateriWithImages(materi, gambar, []);
   }
 
   // Hapus materi
@@ -606,81 +716,81 @@ class FirebaseService {
   }
 
   // Get Identitas
-Future<Identitas?> getIdentitas() async {
-  try {
-    QuerySnapshot querySnapshot = await _identitasCollection.limit(1).get();
-    
-    if (querySnapshot.docs.isNotEmpty) {
-      DocumentSnapshot doc = querySnapshot.docs.first;
-      return Identitas.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+  Future<Identitas?> getIdentitas() async {
+    try {
+      QuerySnapshot querySnapshot = await _identitasCollection.limit(1).get();
+      
+      if (querySnapshot.docs.isNotEmpty) {
+        DocumentSnapshot doc = querySnapshot.docs.first;
+        return Identitas.fromMap(doc.data() as Map<String, dynamic>, doc.id);
+      }
+      
+      return null;
+    } catch (e) {
+      print('Error getting identitas: $e');
+      return null;
     }
-    
-    return null;
-  } catch (e) {
-    print('Error getting identitas: $e');
-    return null;
   }
-}
 
-// Tambah atau Update Identitas
-Future<void> saveIdentitas(Identitas identitas, {File? fotoMahasiswa, File? fotoDospem1, File? fotoDospem2}) async {
-  try {
-    // Upload foto mahasiswa jika ada
-    String fotoMahasiswaUrl = identitas.fotoMahasiswaUrl;
-    if (fotoMahasiswa != null) {
-      String? uploadedUrl = await _cPanelService.uploadImage(fotoMahasiswa);
-      if (uploadedUrl != null) {
-        fotoMahasiswaUrl = uploadedUrl;
+  // Tambah atau Update Identitas
+  Future<void> saveIdentitas(Identitas identitas, {File? fotoMahasiswa, File? fotoDospem1, File? fotoDospem2}) async {
+    try {
+      // Upload foto mahasiswa jika ada
+      String fotoMahasiswaUrl = identitas.fotoMahasiswaUrl;
+      if (fotoMahasiswa != null) {
+        String? uploadedUrl = await _cPanelService.uploadImage(fotoMahasiswa);
+        if (uploadedUrl != null) {
+          fotoMahasiswaUrl = uploadedUrl;
+        }
       }
-    }
-    
-    // Upload foto dosen pembimbing 1 jika ada
-    String fotoDospem1Url = identitas.fotoDospem1Url;
-    if (fotoDospem1 != null) {
-      String? uploadedUrl = await _cPanelService.uploadImage(fotoDospem1);
-      if (uploadedUrl != null) {
-        fotoDospem1Url = uploadedUrl;
+      
+      // Upload foto dosen pembimbing 1 jika ada
+      String fotoDospem1Url = identitas.fotoDospem1Url;
+      if (fotoDospem1 != null) {
+        String? uploadedUrl = await _cPanelService.uploadImage(fotoDospem1);
+        if (uploadedUrl != null) {
+          fotoDospem1Url = uploadedUrl;
+        }
       }
-    }
-    
-    // Upload foto dosen pembimbing 2 jika ada
-    String? fotoDospem2Url = identitas.fotoDospem2Url;
-    if (fotoDospem2 != null) {
-      String? uploadedUrl = await _cPanelService.uploadImage(fotoDospem2);
-      if (uploadedUrl != null) {
-        fotoDospem2Url = uploadedUrl;
+      
+      // Upload foto dosen pembimbing 2 jika ada
+      String? fotoDospem2Url = identitas.fotoDospem2Url;
+      if (fotoDospem2 != null) {
+        String? uploadedUrl = await _cPanelService.uploadImage(fotoDospem2);
+        if (uploadedUrl != null) {
+          fotoDospem2Url = uploadedUrl;
+        }
       }
+      
+      // Data untuk disimpan
+      Map<String, dynamic> data = {
+        'namaMahasiswa': identitas.namaMahasiswa,
+        'nimMahasiswa': identitas.nimMahasiswa,
+        'prodiMahasiswa': identitas.prodiMahasiswa,
+        'fotoMahasiswaUrl': fotoMahasiswaUrl,
+        'namaDospem1': identitas.namaDospem1,
+        'nipDospem1': identitas.nipDospem1,
+        'fotoDospem1Url': fotoDospem1Url,
+        'namaDospem2': identitas.namaDospem2,
+        'nipDospem2': identitas.nipDospem2,
+        'fotoDospem2Url': fotoDospem2Url,
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+      
+      // Cek apakah ada dokumen identitas atau tidak
+      if (identitas.id.isEmpty) {
+        // Tambah data baru jika belum ada
+        data['createdAt'] = FieldValue.serverTimestamp();
+        await _identitasCollection.add(data);
+      } else {
+        // Update data yang sudah ada
+        await _identitasCollection.doc(identitas.id).update(data);
+      }
+      
+      print('Identitas saved successfully');
+    } catch (e) {
+      print('Error saving identitas: $e');
+      throw e;
     }
-    
-    // Data untuk disimpan
-    Map<String, dynamic> data = {
-      'namaMahasiswa': identitas.namaMahasiswa,
-      'nimMahasiswa': identitas.nimMahasiswa,
-      'prodiMahasiswa': identitas.prodiMahasiswa,
-      'fotoMahasiswaUrl': fotoMahasiswaUrl,
-      'namaDospem1': identitas.namaDospem1,
-      'nipDospem1': identitas.nipDospem1,
-      'fotoDospem1Url': fotoDospem1Url,
-      'namaDospem2': identitas.namaDospem2,
-      'nipDospem2': identitas.nipDospem2,
-      'fotoDospem2Url': fotoDospem2Url,
-      'updatedAt': FieldValue.serverTimestamp(),
-    };
-    
-    // Cek apakah ada dokumen identitas atau tidak
-    if (identitas.id.isEmpty) {
-      // Tambah data baru jika belum ada
-      data['createdAt'] = FieldValue.serverTimestamp();
-      await _identitasCollection.add(data);
-    } else {
-      // Update data yang sudah ada
-      await _identitasCollection.doc(identitas.id).update(data);
-    }
-    
-    print('Identitas saved successfully');
-  } catch (e) {
-    print('Error saving identitas: $e');
-    throw e;
   }
-}
 }

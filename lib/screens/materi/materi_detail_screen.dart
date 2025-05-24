@@ -430,6 +430,323 @@ class MateriDetailScreen extends StatelessWidget {
     );
   }
 
+  // Method untuk membangun konten materi dengan dukungan multiple images
+  Widget _buildMateriContent(String content) {
+    // Bersihkan dan format konten
+    String cleanContent = content.trim();
+    if (cleanContent.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            children: [
+              Icon(
+                Icons.article_outlined,
+                size: 48,
+                color: Colors.grey[400],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Konten materi belum tersedia',
+                style: AppTheme.bodyMedium.copyWith(
+                  color: Colors.grey[600],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Split konten berdasarkan paragraf dan image markers
+    List<Widget> contentWidgets = [];
+    List<String> parts = cleanContent.split('\n');
+    
+    for (String part in parts) {
+      part = part.trim();
+      if (part.isEmpty) continue;
+      
+      // Check for image URL marker
+      if (part.startsWith('[IMG_URL:') && part.endsWith(']')) {
+        String imageUrl = part.substring(9, part.length - 1); // Remove [IMG_URL: and ]
+        contentWidgets.add(_buildContentImage(imageUrl));
+        continue;
+      }
+      
+      // Process text content
+      Widget? textWidget = _buildTextContent(part);
+      if (textWidget != null) {
+        contentWidgets.add(textWidget);
+      }
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: contentWidgets,
+    );
+  }
+
+  // Method untuk membangun widget gambar dalam konten
+  Widget _buildContentImage(String imageUrl) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: CachedNetworkImage(
+              imageUrl: imageUrl,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                height: 200,
+                color: Colors.grey[200],
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+              errorWidget: (context, url, error) {
+                print("Error loading content image: $error");
+                return Container(
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.broken_image,
+                        size: 48,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Gambar tidak dapat dimuat',
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'URL: ${imageUrl.length > 50 ? imageUrl.substring(0, 50) + '...' : imageUrl}',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: Colors.grey[500],
+                            fontSize: 10,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          // Tambahan: Caption atau keterangan gambar jika diperlukan
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              'Gambar Materi Pembelajaran',
+              style: AppTheme.bodySmall.copyWith(
+                color: Colors.grey[600],
+                fontStyle: FontStyle.italic,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Method untuk membangun widget teks konten
+  Widget? _buildTextContent(String paragraph) {
+    if (paragraph.isEmpty) return null;
+    
+    // Heading Level 1 (# )
+    if (paragraph.startsWith('# ')) {
+      return Container(
+        margin: const EdgeInsets.only(top: 20, bottom: 12),
+        child: Text(
+          paragraph.substring(2).trim(),
+          style: AppTheme.headingSmall.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.primaryColorDark,
+            height: 1.3,
+          ),
+        ),
+      );
+    }
+    
+    // Heading Level 2 (## )
+    else if (paragraph.startsWith('## ')) {
+      return Container(
+        margin: const EdgeInsets.only(top: 16, bottom: 10),
+        child: Text(
+          paragraph.substring(3).trim(),
+          style: AppTheme.subtitleLarge.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.primaryColor,
+            height: 1.3,
+          ),
+        ),
+      );
+    }
+    
+    // Heading Level 3 (### )
+    else if (paragraph.startsWith('### ')) {
+      return Container(
+        margin: const EdgeInsets.only(top: 12, bottom: 8),
+        child: Text(
+          paragraph.substring(4).trim(),
+          style: AppTheme.subtitleMedium.copyWith(
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textColor,
+            height: 1.3,
+          ),
+        ),
+      );
+    }
+    
+    // Bullet Points (- atau * )
+    else if (paragraph.startsWith('- ') || paragraph.startsWith('* ')) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 8, right: 12, left: 8),
+              width: 6,
+              height: 6,
+              decoration: const BoxDecoration(
+                color: AppTheme.primaryColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                paragraph.substring(2).trim(),
+                style: AppTheme.bodyMedium.copyWith(
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.justify,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    // Numbered Lists (1. 2. etc.)
+    else if (RegExp(r'^\d+\.\s').hasMatch(paragraph)) {
+      var match = RegExp(r'^(\d+)\.\s(.*)').firstMatch(paragraph);
+      if (match != null) {
+        String number = match.group(1)!;
+        String text = match.group(2)!;
+        
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(right: 12, left: 8),
+                width: 24,
+                height: 24,
+                decoration: const BoxDecoration(
+                  color: AppTheme.primaryColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    number,
+                    style: AppTheme.bodySmall.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  text,
+                  style: AppTheme.bodyMedium.copyWith(
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.justify,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+    
+    // Quote/Important text (> )
+    else if (paragraph.startsWith('> ')) {
+      return Container(
+        margin: const EdgeInsets.only(top: 12, bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.primaryColor.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(8),
+          border: const Border(
+            left: BorderSide(
+              color: AppTheme.primaryColor,
+              width: 4,
+            ),
+          ),
+        ),
+        child: Text(
+          paragraph.substring(2).trim(),
+          style: AppTheme.bodyMedium.copyWith(
+            fontStyle: FontStyle.italic,
+            color: AppTheme.primaryColorDark,
+            height: 1.5,
+          ),
+          textAlign: TextAlign.justify,
+        ),
+      );
+    }
+    
+    // Bold text (**text**)
+    else if (paragraph.contains('**')) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: _buildRichTextJustified(paragraph),
+      );
+    }
+    
+    // Regular paragraph
+    else {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: Text(
+          paragraph,
+          style: AppTheme.bodyMedium.copyWith(
+            height: 1.5,
+            color: AppTheme.textColor,
+          ),
+          textAlign: TextAlign.justify,
+        ),
+      );
+    }
+    
+    return null;
+  }
+
   // Method untuk memformat konten yang lebih ringkas (untuk capaian, tujuan, deskripsi)
   Widget _buildFormattedContent(String content, {TextAlign textAlign = TextAlign.justify}) {
     // Bersihkan dan format konten
@@ -548,228 +865,6 @@ class MateriDetailScreen extends StatelessWidget {
                 height: 1.5,
               ),
               textAlign: textAlign,
-            ),
-          );
-        }
-        
-        return const SizedBox.shrink();
-      }).toList(),
-    );
-  }
-
-  Widget _buildMateriContent(String content) {
-    // Bersihkan dan format konten
-    String cleanContent = content.trim();
-    if (cleanContent.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            children: [
-              Icon(
-                Icons.article_outlined,
-                size: 48,
-                color: Colors.grey[400],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Konten materi belum tersedia',
-                style: AppTheme.bodyMedium.copyWith(
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    // Split konten berdasarkan paragraf
-    List<String> paragraphs = cleanContent.split('\n').where((p) => p.trim().isNotEmpty).toList();
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: paragraphs.asMap().entries.map<Widget>((entry) {
-        int paragraphIndex = entry.key;
-        String paragraph = entry.value.trim();
-        
-        if (paragraph.isEmpty) return const SizedBox.shrink();
-        
-        // Heading Level 1 (# )
-        if (paragraph.startsWith('# ')) {
-          return Container(
-            margin: EdgeInsets.only(
-              top: paragraphIndex == 0 ? 0 : 20,
-              bottom: 12,
-            ),
-            child: Text(
-              paragraph.substring(2).trim(),
-              style: AppTheme.headingSmall.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primaryColorDark,
-                height: 1.3,
-              ),
-            ),
-          );
-        }
-        
-        // Heading Level 2 (## )
-        else if (paragraph.startsWith('## ')) {
-          return Container(
-            margin: EdgeInsets.only(
-              top: paragraphIndex == 0 ? 0 : 16,
-              bottom: 10,
-            ),
-            child: Text(
-              paragraph.substring(3).trim(),
-              style: AppTheme.subtitleLarge.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primaryColor,
-                height: 1.3,
-              ),
-            ),
-          );
-        }
-        
-        // Heading Level 3 (### )
-        else if (paragraph.startsWith('### ')) {
-          return Container(
-            margin: EdgeInsets.only(
-              top: paragraphIndex == 0 ? 0 : 12,
-              bottom: 8,
-            ),
-            child: Text(
-              paragraph.substring(4).trim(),
-              style: AppTheme.subtitleMedium.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textColor,
-                height: 1.3,
-              ),
-            ),
-          );
-        }
-        
-        // Bullet Points (- atau * )
-        else if (paragraph.startsWith('- ') || paragraph.startsWith('* ')) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  margin: const EdgeInsets.only(top: 8, right: 12, left: 8),
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.primaryColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    paragraph.substring(2).trim(),
-                    style: AppTheme.bodyMedium.copyWith(
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.justify,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-        
-        // Numbered Lists (1. 2. etc.)
-        else if (RegExp(r'^\d+\.\s').hasMatch(paragraph)) {
-          var match = RegExp(r'^(\d+)\.\s(.*)').firstMatch(paragraph);
-          if (match != null) {
-            String number = match.group(1)!;
-            String text = match.group(2)!;
-            
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(right: 12, left: 8),
-                    width: 24,
-                    height: 24,
-                    decoration: const BoxDecoration(
-                      color: AppTheme.primaryColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        number,
-                        style: AppTheme.bodySmall.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Text(
-                      text,
-                      style: AppTheme.bodyMedium.copyWith(
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.justify,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-        }
-        
-        // Quote/Important text (> )
-        else if (paragraph.startsWith('> ')) {
-          return Container(
-            margin: const EdgeInsets.only(top: 12, bottom: 12),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(8),
-              border: const Border(
-                left: BorderSide(
-                  color: AppTheme.primaryColor,
-                  width: 4,
-                ),
-              ),
-            ),
-            child: Text(
-              paragraph.substring(2).trim(),
-              style: AppTheme.bodyMedium.copyWith(
-                fontStyle: FontStyle.italic,
-                color: AppTheme.primaryColorDark,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.justify,
-            ),
-          );
-        }
-        
-        // Bold text (**text**)
-        else if (paragraph.contains('**')) {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: _buildRichTextJustified(paragraph),
-          );
-        }
-        
-        // Regular paragraph
-        else {
-          return Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: Text(
-              paragraph,
-              style: AppTheme.bodyMedium.copyWith(
-                height: 1.5,
-                color: AppTheme.textColor,
-              ),
-              textAlign: TextAlign.justify,
             ),
           );
         }

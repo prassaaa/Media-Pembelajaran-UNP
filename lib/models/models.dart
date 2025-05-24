@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:io';
 
 class Materi {
   final String id;
@@ -245,4 +246,50 @@ class Identitas {
       'updatedAt': updatedAt,
     };
   }
+}
+
+// Model untuk Content Images - BARU
+class ContentImage {
+  final String id;
+  final String imageUrl;
+  final File? file;
+
+  ContentImage({
+    required this.id,
+    required this.imageUrl,
+    this.file,
+  });
+
+  // Copy constructor untuk editing
+  ContentImage copyWith({
+    String? id,
+    String? imageUrl,
+    File? file,
+  }) {
+    return ContentImage(
+      id: id ?? this.id,
+      imageUrl: imageUrl ?? this.imageUrl,
+      file: file ?? this.file,
+    );
+  }
+
+  // Helper method untuk mengecek apakah ini gambar baru atau sudah ada
+  bool get isNewImage => file != null;
+  bool get isExistingImage => imageUrl.isNotEmpty && file == null;
+
+  @override
+  String toString() {
+    return 'ContentImage(id: $id, imageUrl: $imageUrl, hasFile: ${file != null})';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is ContentImage &&
+        other.id == id &&
+        other.imageUrl == imageUrl;
+  }
+
+  @override
+  int get hashCode => id.hashCode ^ imageUrl.hashCode;
 }
