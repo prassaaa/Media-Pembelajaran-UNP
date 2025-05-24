@@ -3,19 +3,6 @@ import 'package:pembelajaran_app/models/models.dart';
 import 'dart:io';
 import 'package:pembelajaran_app/services/cpanel_service.dart';
 
-// Model class untuk content images
-class ContentImage {
-  final String id;
-  final String imageUrl;
-  final File? file;
-
-  ContentImage({
-    required this.id,
-    required this.imageUrl,
-    this.file,
-  });
-}
-
 class FirebaseService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final CPanelService _cPanelService = CPanelService();
@@ -565,6 +552,7 @@ class FirebaseService {
     }
   }
 
+  // ADMIN PASSWORD OPERATIONS
   // PERBAIKAN: Verifikasi password admin yang lebih robust
   Future<bool> verifyAdminPassword(String password) async {
     try {
@@ -677,6 +665,7 @@ class FirebaseService {
     }
   }
 
+  // PRELOAD METHODS
   // Tambahkan method ini ke FirebaseService
   Future<void> preloadVideos() async {
     try {
@@ -715,6 +704,7 @@ class FirebaseService {
     }
   }
 
+  // IDENTITAS OPERATIONS
   // Get Identitas
   Future<Identitas?> getIdentitas() async {
     try {

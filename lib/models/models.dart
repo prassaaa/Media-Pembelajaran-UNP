@@ -7,8 +7,8 @@ class Materi {
   final String deskripsi;
   final String gambarUrl;
   final String konten;
-  final String capaianPembelajaran; // Field baru
-  final String tujuanPembelajaran;  // Field baru
+  final String capaianPembelajaran;
+  final String tujuanPembelajaran;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -18,8 +18,8 @@ class Materi {
     required this.deskripsi,
     required this.gambarUrl,
     required this.konten,
-    required this.capaianPembelajaran, // Field baru
-    required this.tujuanPembelajaran,  // Field baru
+    required this.capaianPembelajaran,
+    required this.tujuanPembelajaran,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -31,8 +31,8 @@ class Materi {
       deskripsi: map['deskripsi'] ?? '',
       gambarUrl: map['gambarUrl'] ?? '',
       konten: map['konten'] ?? '',
-      capaianPembelajaran: map['capaianPembelajaran'] ?? '', // Field baru
-      tujuanPembelajaran: map['tujuanPembelajaran'] ?? '',   // Field baru
+      capaianPembelajaran: map['capaianPembelajaran'] ?? '',
+      tujuanPembelajaran: map['tujuanPembelajaran'] ?? '',
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       updatedAt: (map['updatedAt'] as Timestamp).toDate(),
     );
@@ -44,8 +44,8 @@ class Materi {
       'deskripsi': deskripsi,
       'gambarUrl': gambarUrl,
       'konten': konten,
-      'capaianPembelajaran': capaianPembelajaran, // Field baru
-      'tujuanPembelajaran': tujuanPembelajaran,   // Field baru
+      'capaianPembelajaran': capaianPembelajaran,
+      'tujuanPembelajaran': tujuanPembelajaran,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
     };
@@ -248,7 +248,7 @@ class Identitas {
   }
 }
 
-// Model untuk Content Images - BARU
+// Model untuk Content Images - SINGLE SOURCE OF TRUTH
 class ContentImage {
   final String id;
   final String imageUrl;
