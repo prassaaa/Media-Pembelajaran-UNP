@@ -11,7 +11,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Current selected tab index
   void _showAdminPasswordDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -29,6 +28,480 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         );
       },
+    );
+  }
+
+  void _showTutorialModal(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.8,
+              maxWidth: MediaQuery.of(context).size.width * 0.9,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header Modal
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [AppTheme.primaryColor, AppTheme.primaryColorDark],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.school_outlined,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Panduan Penggunaan',
+                                  style: AppTheme.subtitleLarge.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Media Pembelajaran Digital',
+                                  style: AppTheme.bodySmall.copyWith(
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Content Modal
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Welcome Section
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppTheme.primaryColor.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.waving_hand,
+                                color: Colors.orange,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Selamat Datang!',
+                                      style: AppTheme.subtitleMedium.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: AppTheme.primaryColor,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Aplikasi pembelajaran digital untuk membantu studi Anda',
+                                      style: AppTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 20),
+                        
+                        Text(
+                          'Fitur Utama Aplikasi',
+                          style: AppTheme.headingSmall.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Tutorial Steps
+                        _buildTutorialStep(
+                          number: '1',
+                          icon: Icons.menu_book_rounded,
+                          color: AppTheme.primaryColor,
+                          title: 'Materi Pembelajaran',
+                          description: 'Akses berbagai materi pembelajaran dalam format digital. Baca dan pelajari konten yang telah disediakan oleh pengajar.',
+                          tips: [
+                            'Buka menu "Materi Pembelajaran"',
+                            'Pilih materi yang ingin dipelajari',
+                            'Baca konten dengan seksama',
+                            'Gunakan fitur bookmark untuk menyimpan materi favorit'
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        _buildTutorialStep(
+                          number: '2',
+                          icon: Icons.play_circle_fill_rounded,
+                          color: AppTheme.accentColor,
+                          title: 'Video Pembelajaran',
+                          description: 'Tonton video tutorial interaktif untuk memahami materi dengan lebih baik melalui penjelasan visual.',
+                          tips: [
+                            'Buka menu "Video Pembelajaran"',
+                            'Pilih video yang sesuai dengan topik',
+                            'Tonton video hingga selesai',
+                            'Gunakan kontrol player untuk pause/replay'
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        _buildTutorialStep(
+                          number: '3',
+                          icon: Icons.quiz_rounded,
+                          color: AppTheme.successColor,
+                          title: 'Evaluasi Belajar',
+                          description: 'Uji pemahaman Anda dengan mengerjakan soal-soal evaluasi dan dapatkan nilai hasil belajar.',
+                          tips: [
+                            'Buka menu "Evaluasi Belajar"',
+                            'Pilih evaluasi yang tersedia',
+                            'Baca instruksi dengan teliti',
+                            'Jawab semua pertanyaan dengan baik',
+                            'Lihat hasil dan analisis jawaban'
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        _buildTutorialStep(
+                          number: '4',
+                          icon: Icons.people_alt_rounded,
+                          color: Colors.purple,
+                          title: 'Identitas Pengembang',
+                          description: 'Lihat informasi tentang pengembang aplikasi dan tim yang terlibat dalam pembuatan aplikasi ini.',
+                          tips: [
+                            'Buka menu "Identitas Pengembang"',
+                            'Lihat profil mahasiswa dan dosen pembimbing',
+                            'Hubungi pengembang jika ada pertanyaan'
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 24),
+                        
+                        // Tips Section
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.warningColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppTheme.warningColor.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.lightbulb_outline,
+                                    color: Colors.orange,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Tips Belajar Efektif',
+                                    style: AppTheme.subtitleMedium.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.orange[800],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              _buildTipItem('Belajar secara bertahap dan konsisten'),
+                              _buildTipItem('Catat poin-poin penting dari materi'),
+                              _buildTipItem('Kerjakan evaluasi untuk mengukur pemahaman'),
+                              _buildTipItem('Ulangi materi yang belum dipahami'),
+                              _buildTipItem('Manfaatkan video untuk visualisasi konsep'),
+                            ],
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 20),
+                        
+                        // Contact Section
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppTheme.infoColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.help_outline,
+                                    color: AppTheme.infoColor,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Butuh Bantuan?',
+                                    style: AppTheme.subtitleMedium.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.infoColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Jika Anda mengalami kesulitan atau memiliki pertanyaan, jangan ragu untuk menghubungi pengembang melalui menu "Identitas Pengembang".',
+                                style: AppTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                // Footer Modal
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(20),
+                      bottomRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(
+                            'Mulai Belajar',
+                            style: AppTheme.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTutorialStep({
+    required String number,
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String description,
+    required List<String> tips,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: color.withOpacity(0.2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    number,
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTheme.subtitleMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            description,
+            style: AppTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Cara menggunakan:',
+            style: AppTheme.bodySmall.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[700],
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...tips.map((tip) => Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 6),
+                  width: 4,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    tip,
+                    style: AppTheme.bodySmall.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTipItem(String tip) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 6),
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.orange,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              tip,
+              style: AppTheme.bodySmall,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -75,7 +548,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Media Pembelajaran',
+                              'Hak dan Kewajiban',
                               style: AppTheme.headingMedium.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -96,28 +569,42 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      // Logo dengan animasi
+                      // Profile Image dengan Hero Animation (tanpa aksi klik)
                       Hero(
-                        tag: 'app_logo',
+                        tag: 'profile_image',
                         child: Container(
                           height: 65,
                           width: 65,
-                          padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
+                            borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withOpacity(0.2),
                                 blurRadius: 10,
                                 offset: const Offset(0, 5),
                               ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.school,
-                            color: AppTheme.primaryColor,
-                            size: 32,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.asset(
+                              AppConstants.profileImagePath,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                // Fallback jika gambar tidak ditemukan
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.person,
+                                    color: AppTheme.primaryColor,
+                                    size: 32,
+                                  ),
+                                );
+                              },
+                            ),
                           ),
                         ),
                       ),
@@ -193,11 +680,47 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 16),
-                    Text(
-                      'Pilih Fitur Pembelajaran',
-                      style: AppTheme.headingSmall.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          'Pilih Fitur Pembelajaran',
+                          style: AppTheme.headingSmall.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Spacer(),
+                        GestureDetector(
+                          onTap: () => _showTutorialModal(context),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: AppTheme.primaryColor.withOpacity(0.3),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.help_outline,
+                                  size: 16,
+                                  color: AppTheme.primaryColor,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Tutorial',
+                                  style: AppTheme.bodySmall.copyWith(
+                                    color: AppTheme.primaryColor,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     Text(
                       'Akses berbagai konten pembelajaran digital',
@@ -211,7 +734,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisCount: screenSize.width > 600 ? 3 : 2,
                         crossAxisSpacing: 16,
                         mainAxisSpacing: 16,
-                        childAspectRatio: 0.85, // Mengatur aspek rasio untuk menghindari overflow
+                        childAspectRatio: 0.85,
                         children: [
                           _buildFeatureCard(
                             context,
@@ -342,43 +865,43 @@ class _HomeScreenState extends State<HomeScreen> {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(12.0), // Mengurangi padding
+            padding: const EdgeInsets.all(12.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min, // Menentukan ukuran minimal kolom
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(12), // Mengurangi padding
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
                     icon,
-                    size: 32, // Mengurangi ukuran ikon
+                    size: 32,
                     color: color,
                   ),
                 ),
-                const SizedBox(height: 8), // Mengurangi jarak
+                const SizedBox(height: 8),
                 Text(
                   title,
                   style: AppTheme.subtitleMedium.copyWith(
                     fontWeight: FontWeight.bold,
-                    fontSize: 13, // Mengurangi ukuran font
+                    fontSize: 13,
                   ),
                   textAlign: TextAlign.center,
-                  maxLines: 1, // Membatasi jumlah baris
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4), // Mengurangi jarak
+                const SizedBox(height: 4),
                 Text(
                   description,
                   style: AppTheme.bodySmall.copyWith(
                     color: AppTheme.secondaryTextColor,
-                    fontSize: 10, // Mengurangi ukuran font
+                    fontSize: 10,
                   ),
                   textAlign: TextAlign.center,
-                  maxLines: 2, // Membatasi jumlah baris
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],

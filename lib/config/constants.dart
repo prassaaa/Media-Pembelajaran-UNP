@@ -40,6 +40,7 @@ class AppConstants {
   
   // Asset paths
   static const String logoPath = 'assets/images/logo.png';
+  static const String profileImagePath = 'assets/images/profile.png';
   static const String loginBgPath = 'assets/images/login_bg.png';
   static const String emptyStateIllustration = 'assets/images/empty_state.png';
   static const String errorIllustration = 'assets/images/error.png';
