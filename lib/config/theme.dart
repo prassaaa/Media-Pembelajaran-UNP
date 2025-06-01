@@ -79,12 +79,12 @@ class AppTheme {
         primary: primaryColor,
         secondary: accentColor,
         error: errorColor,
-        background: backgroundColor,
-        surface: cardColor,
+        surface: backgroundColor, // Changed from background to surface
+        onSurface: cardColor,
       ),
       primaryColor: primaryColor,
       scaffoldBackgroundColor: backgroundColor,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData( // Changed from CardTheme to CardThemeData
         color: cardColor,
         elevation: 2,
         shape: RoundedRectangleBorder(
