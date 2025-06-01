@@ -225,18 +225,101 @@ class _MateriScreenState extends State<MateriScreen> {
                     const SizedBox(height: 24),
                   ],
                   Expanded(
-                    child: GridView.builder(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.70, // Adjusted from 0.75 to give more height
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                      ),
-                      itemCount: materiList.length,
-                      itemBuilder: (context, index) {
-                        final materi = materiList[index];
-                        return _buildMateriCard(context, materi);
-                      },
+                    child: Column(
+                      children: [
+                        // Grid untuk materi
+                        Expanded(
+                          child: GridView.builder(
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.70,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                            itemCount: materiList.length,
+                            itemBuilder: (context, index) {
+                              final materi = materiList[index];
+                              return _buildMateriCard(context, materi);
+                            },
+                          ),
+                        ),
+                        
+                        // Section untuk Identitas Pengembang di bagian bawah
+                        const SizedBox(height: 20),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.purple.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.purple.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.purple.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.people_alt_rounded,
+                                  color: Colors.purple,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Identitas Pengembang',
+                                      style: AppTheme.subtitleMedium.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.purple,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Informasi tentang pembuat aplikasi',
+                                      style: AppTheme.bodySmall.copyWith(
+                                        color: AppTheme.secondaryTextColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.pushNamed(
+                                      context,
+                                      AppConstants.routeIdentitas,
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.purple.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: Colors.purple,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -361,13 +444,13 @@ class _MateriScreenState extends State<MateriScreen> {
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min, // Add this
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         materi.judul,
                         style: AppTheme.subtitleMedium.copyWith(
                           fontWeight: FontWeight.bold,
-                          fontSize: 13, // Slightly reduce font size
+                          fontSize: 13,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -377,34 +460,32 @@ class _MateriScreenState extends State<MateriScreen> {
                         materi.deskripsi,
                         style: AppTheme.bodySmall.copyWith(
                           color: AppTheme.secondaryTextColor,
-                          fontSize: 11, // Slightly reduce font size
+                          fontSize: 11,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const Spacer(), // Use Spacer to push the date and arrow to the bottom
-                      // Fix Overflow by using a Row with mainAxisSize: min
+                      const Spacer(),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Date with truncated text if needed
                           Flexible(
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(
                                   Icons.calendar_today,
-                                  size: 10, // Make icon smaller
+                                  size: 10,
                                   color: Colors.grey,
                                 ),
-                                const SizedBox(width: 2), // Reduce spacing
+                                const SizedBox(width: 2),
                                 Flexible(
                                   child: Text(
                                     '${materi.updatedAt.day}/${materi.updatedAt.month}/${materi.updatedAt.year}',
                                     style: AppTheme.bodySmall.copyWith(
                                       color: Colors.grey,
-                                      fontSize: 9, // Make text smaller
+                                      fontSize: 9,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -420,7 +501,7 @@ class _MateriScreenState extends State<MateriScreen> {
                             ),
                             child: const Icon(
                               Icons.arrow_forward_ios,
-                              size: 10, // Make icon smaller
+                              size: 10,
                               color: AppTheme.primaryColor,
                             ),
                           ),

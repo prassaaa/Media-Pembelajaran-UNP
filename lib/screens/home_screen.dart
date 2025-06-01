@@ -11,6 +11,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  // Show admin password dialog
   void _showAdminPasswordDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -18,10 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (BuildContext dialogContext) {
         return AdminPasswordDialog(
           onAuthenticated: (isAuthenticated) {
-            // Tutup dialog terlebih dahulu
             Navigator.pop(dialogContext);
-            
-            // Kemudian lakukan navigasi jika berhasil
             if (isAuthenticated) {
               Navigator.pushNamed(context, AppConstants.routeAdmin);
             }
@@ -31,6 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Show tutorial modal
   void _showTutorialModal(BuildContext context) {
     showDialog(
       context: context,
@@ -48,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Header Modal
+                // Modal Header
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
@@ -112,8 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-                
-                // Content Modal
+                // Modal Content
                 Flexible(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(20),
@@ -159,25 +157,22 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-                        
                         const SizedBox(height: 20),
-                        
                         Text(
                           'Fitur Utama Aplikasi',
                           style: AppTheme.headingSmall.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        
                         const SizedBox(height: 16),
-                        
                         // Tutorial Steps
                         _buildTutorialStep(
                           number: '1',
                           icon: Icons.menu_book_rounded,
                           color: AppTheme.primaryColor,
                           title: 'Materi Pembelajaran',
-                          description: 'Akses berbagai materi pembelajaran dalam format digital. Baca dan pelajari konten yang telah disediakan oleh pengajar.',
+                          description:
+                              'Akses berbagai materi pembelajaran dalam format digital. Baca dan pelajari konten yang telah disediakan oleh pengajar.',
                           tips: [
                             'Buka menu "Materi Pembelajaran"',
                             'Pilih materi yang ingin dipelajari',
@@ -185,15 +180,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             'Gunakan fitur bookmark untuk menyimpan materi favorit'
                           ],
                         ),
-                        
                         const SizedBox(height: 16),
-                        
                         _buildTutorialStep(
                           number: '2',
                           icon: Icons.play_circle_fill_rounded,
                           color: AppTheme.accentColor,
                           title: 'Video Pembelajaran',
-                          description: 'Tonton video tutorial interaktif untuk memahami materi dengan lebih baik melalui penjelasan visual.',
+                          description:
+                              'Tonton video tutorial interaktif untuk memahami materi dengan lebih baik melalui penjelasan visual.',
                           tips: [
                             'Buka menu "Video Pembelajaran"',
                             'Pilih video yang sesuai dengan topik',
@@ -201,15 +195,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             'Gunakan kontrol player untuk pause/replay'
                           ],
                         ),
-                        
                         const SizedBox(height: 16),
-                        
                         _buildTutorialStep(
                           number: '3',
                           icon: Icons.quiz_rounded,
                           color: AppTheme.successColor,
                           title: 'Evaluasi Belajar',
-                          description: 'Uji pemahaman Anda dengan mengerjakan soal-soal evaluasi dan dapatkan nilai hasil belajar.',
+                          description:
+                              'Uji pemahaman Anda dengan mengerjakan soal-soal evaluasi dan dapatkan nilai hasil belajar.',
                           tips: [
                             'Buka menu "Evaluasi Belajar"',
                             'Pilih evaluasi yang tersedia',
@@ -218,24 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             'Lihat hasil dan analisis jawaban'
                           ],
                         ),
-                        
-                        const SizedBox(height: 16),
-                        
-                        _buildTutorialStep(
-                          number: '4',
-                          icon: Icons.people_alt_rounded,
-                          color: Colors.purple,
-                          title: 'Identitas Pengembang',
-                          description: 'Lihat informasi tentang pengembang aplikasi dan tim yang terlibat dalam pembuatan aplikasi ini.',
-                          tips: [
-                            'Buka menu "Identitas Pengembang"',
-                            'Lihat profil mahasiswa dan dosen pembimbing',
-                            'Hubungi pengembang jika ada pertanyaan'
-                          ],
-                        ),
-                        
                         const SizedBox(height: 24),
-                        
                         // Tips Section
                         Container(
                           padding: const EdgeInsets.all(16),
@@ -275,9 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ],
                           ),
                         ),
-                        
                         const SizedBox(height: 20),
-                        
                         // Contact Section
                         Container(
                           padding: const EdgeInsets.all(16),
@@ -307,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Jika Anda mengalami kesulitan atau memiliki pertanyaan, jangan ragu untuk menghubungi pengembang melalui menu "Identitas Pengembang".',
+                                'Jika Anda mengalami kesulitan atau memiliki pertanyaan, jangan ragu untuk menghubungi pengembang melalui menu "Identitas Pengembang" di halaman Materi Pembelajaran.',
                                 style: AppTheme.bodySmall,
                               ),
                             ],
@@ -317,8 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                
-                // Footer Modal
+                // Modal Footer
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
@@ -361,6 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Build individual tutorial step
   Widget _buildTutorialStep({
     required String number,
     required IconData icon,
@@ -448,36 +422,37 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 8),
           ...tips.map((tip) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  margin: const EdgeInsets.only(top: 6),
-                  width: 4,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: color,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    tip,
-                    style: AppTheme.bodySmall.copyWith(
-                      color: Colors.grey[600],
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 6),
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        tip,
+                        style: AppTheme.bodySmall.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          )).toList(),
+              )),
         ],
       ),
     );
   }
 
+  // Build individual tip item
   Widget _buildTipItem(String tip) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
@@ -513,14 +488,13 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header dengan Background Gambar Indonesia
+            // Header Section
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                // Menggunakan gambar sebagai background
                 image: DecorationImage(
-                  image: AssetImage('assets/images/indonesia_background.png'), // Path ke gambar Anda
+                  image: AssetImage('assets/images/indonesia_background.png'),
                   fit: BoxFit.cover,
                   alignment: Alignment.center,
                 ),
@@ -537,9 +511,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               child: Container(
-                // Menambahkan overlay semi-transparan untuk memastikan teks tetap terbaca
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3), // Overlay gelap transparan
+                  color: Colors.black.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 padding: const EdgeInsets.all(16),
@@ -588,7 +561,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 16),
-                        // Profile Image dengan Hero Animation
                         Hero(
                           tag: 'profile_image',
                           child: Container(
@@ -633,8 +605,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 24),
-                    
-                    // Slogan dan Tombol Admin
                     Row(
                       children: [
                         Expanded(
@@ -721,8 +691,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            
-            // Menu Grid
+            // Feature Grid
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -819,17 +788,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               AppConstants.routeEvaluasi,
                             ),
                           ),
-                          _buildFeatureCard(
-                            context,
-                            'Identitas Pengembang',
-                            'Informasi tentang pembuat aplikasi',
-                            Icons.people_alt_rounded,
-                            Colors.purple,
-                            () => Navigator.pushNamed(
-                              context,
-                              AppConstants.routeIdentitas,
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -837,7 +795,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            
             // Footer
             Container(
               width: double.infinity,
@@ -889,6 +846,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Build feature card
   Widget _buildFeatureCard(
     BuildContext context,
     String title,
@@ -940,7 +898,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontSize: 13,
                   ),
                   textAlign: TextAlign.center,
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
@@ -962,6 +920,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Build social icon
   Widget _buildSocialIcon(IconData icon, Color color) {
     return Container(
       margin: const EdgeInsets.only(left: 8),
