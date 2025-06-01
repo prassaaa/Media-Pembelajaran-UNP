@@ -11,11 +11,6 @@
   <strong>Aplikasi Pembelajaran Digital Interaktif untuk Mata Pelajaran Hak dan Kewajiban</strong>
 </p>
 
-<p align="center">
-  Dikembangkan oleh <strong>Semen Sugiarti</strong> (NPM: 2114060146)<br>
-  Universitas Nusantara PGRI Kediri
-</p>
-
 ---
 
 ## 🎯 **Tentang Aplikasi**
@@ -210,12 +205,6 @@ Kontribusi sangat diterima! Silakan ikuti langkah berikut:
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
-## 👨‍🎓 **Developer**
-
-<div align="center">
-  <img src="https://via.placeholder.com/150x150/4361EE/FFFFFF?text=SS" alt="Developer Avatar" width="100" style="border-radius: 50%"/>
-  
-
 ## 🙏 **Acknowledgments**
 
 - **Universitas Nusantara PGRI Kediri** - Academic support
@@ -228,5 +217,5 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <div align="center">
   <p><strong>Dibuat dengan ❤️ untuk kemajuan pendidikan Indonesia</strong></p>
-  <p><em>© 2024 Semen Sugiarti - Universitas Nusantara PGRI Kediri</em></p>
+  <p><em>© 2024 Universitas Nusantara PGRI Kediri</em></p>
 </div>
