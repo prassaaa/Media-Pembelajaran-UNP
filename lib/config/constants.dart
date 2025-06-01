@@ -14,6 +14,11 @@ class AppConstants {
   static const String routeEvaluasi = '/evaluasi';
   static const String routeEvaluasiDetail = '/evaluasi/detail';
   static const String routeHasil = '/hasil';
+  
+  // LKPD Routes
+  static const String routeLkpd = '/lkpd';
+  static const String routeLkpdDetail = '/lkpd/detail';
+  
   static const String routeAdmin = '/admin';
   static const String routeAdminIdentitas = '/admin/identitas';
   static const String routeAdminMateri = '/admin/materi';
@@ -23,6 +28,10 @@ class AppConstants {
   static const String routeAdminEvaluasi = '/admin/evaluasi';
   static const String routeAdminEvaluasiForm = '/admin/evaluasi/form';
   static const String routeAdminSoalForm = '/admin/soal/form';
+  
+  // Admin LKPD Routes
+  static const String routeAdminLkpd = '/admin/lkpd';
+  static const String routeAdminLkpdForm = '/admin/lkpd/form';
   
   // Shared preferences keys
   static const String prefAdminPassword = 'admin_password';

@@ -23,11 +23,18 @@ import 'package:pembelajaran_app/services/firebase_service.dart';
 import 'package:pembelajaran_app/screens/identitas_screen.dart';
 import 'package:pembelajaran_app/screens/admin/admin_identitas_form.dart';
 
+// IMPORT BARU UNTUK LKPD
+import 'package:pembelajaran_app/screens/lkpd/lkpd_screen.dart';
+import 'package:pembelajaran_app/screens/lkpd/lkpd_detail_screen.dart';
+import 'package:pembelajaran_app/screens/admin/admin_lkpd_screen.dart';
+import 'package:pembelajaran_app/screens/admin/admin_lkpd_form.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   await FirebaseService().preloadVideos();
   await FirebaseService().preloadMateri();
+  await FirebaseService().preloadLKPD(); // TAMBAH PRELOAD LKPD
   // Setup admin password jika belum ada
   final FirebaseService firebaseService = FirebaseService();
   await firebaseService.setupAdminPassword();
@@ -44,7 +51,7 @@ class MyApp extends StatelessWidget {
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: AppConstants.routeSplash, // Ubah initial route ke splash screen
+      initialRoute: AppConstants.routeSplash,
       routes: {
         // Splash Screen
         AppConstants.routeSplash: (context) => const SplashScreen(),
@@ -60,6 +67,10 @@ class MyApp extends StatelessWidget {
         AppConstants.routeHasil: (context) => const HasilScreen(),
         AppConstants.routeIdentitas: (context) => const IdentitasScreen(),
         
+        // LKPD Routes - BARU
+        AppConstants.routeLkpd: (context) => const LkpdScreen(),
+        AppConstants.routeLkpdDetail: (context) => const LkpdDetailScreen(),
+        
         // Admin Routes
         AppConstants.routeAdmin: (context) => const AdminDashboard(),
         AppConstants.routeAdminMateri: (context) => const AdminMateriScreen(),
@@ -70,6 +81,10 @@ class MyApp extends StatelessWidget {
         AppConstants.routeAdminEvaluasiForm: (context) => const AdminEvaluasiForm(),
         AppConstants.routeAdminSoalForm: (context) => const AdminSoalForm(),
         AppConstants.routeAdminIdentitas: (context) => const AdminIdentitasForm(),
+        
+        // Admin LKPD Routes - BARU
+        AppConstants.routeAdminLkpd: (context) => const AdminLkpdScreen(),
+        AppConstants.routeAdminLkpdForm: (context) => const AdminLkpdForm(),
       },
     );
   }

@@ -293,3 +293,202 @@ class ContentImage {
   @override
   int get hashCode => id.hashCode ^ imageUrl.hashCode;
 }
+
+// LKPD Models
+enum KegiatanType {
+  observasi,
+  analisis,
+  diskusi,
+  eksperimen,
+  refleksi,
+  tugasIndividu,
+  tugasKelompok
+}
+
+class Kegiatan {
+  final String id;
+  final String judul;
+  final String instruksi;
+  final KegiatanType type;
+  final List<String> pertanyaanPemandu;
+  final String? gambarUrl;
+  final int estimasiWaktu; // dalam menit
+
+  Kegiatan({
+    required this.id,
+    required this.judul,
+    required this.instruksi,
+    required this.type,
+    required this.pertanyaanPemandu,
+    this.gambarUrl,
+    required this.estimasiWaktu,
+  });
+
+  factory Kegiatan.fromMap(Map<String, dynamic> map) {
+    return Kegiatan(
+      id: map['id'] ?? '',
+      judul: map['judul'] ?? '',
+      instruksi: map['instruksi'] ?? '',
+      type: KegiatanType.values.firstWhere(
+        (e) => e.toString() == map['type'],
+        orElse: () => KegiatanType.observasi,
+      ),
+      pertanyaanPemandu: List<String>.from(map['pertanyaanPemandu'] ?? []),
+      gambarUrl: map['gambarUrl'],
+      estimasiWaktu: map['estimasiWaktu'] ?? 10,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'judul': judul,
+      'instruksi': instruksi,
+      'type': type.toString(),
+      'pertanyaanPemandu': pertanyaanPemandu,
+      'gambarUrl': gambarUrl,
+      'estimasiWaktu': estimasiWaktu,
+    };
+  }
+}
+
+class LKPD {
+  final String id;
+  final String judul;
+  final String deskripsi;
+  final String gambarUrl;
+  final List<Kegiatan> kegiatanList;
+  final String rubrikPenilaian;
+  final int estimasiWaktu; // total waktu dalam menit
+  final String kompetensiDasar;
+  final String indikatorPencapaian;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  LKPD({
+    required this.id,
+    required this.judul,
+    required this.deskripsi,
+    required this.gambarUrl,
+    required this.kegiatanList,
+    required this.rubrikPenilaian,
+    required this.estimasiWaktu,
+    required this.kompetensiDasar,
+    required this.indikatorPencapaian,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory LKPD.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return LKPD.fromMap(data, doc.id);
+  }
+
+  factory LKPD.fromMap(Map<String, dynamic> map, String id) {
+    return LKPD(
+      id: id,
+      judul: map['judul'] ?? '',
+      deskripsi: map['deskripsi'] ?? '',
+      gambarUrl: map['gambarUrl'] ?? '',
+      kegiatanList: (map['kegiatanList'] as List<dynamic>?)
+          ?.map((item) => Kegiatan.fromMap(item as Map<String, dynamic>))
+          .toList() ?? [],
+      rubrikPenilaian: map['rubrikPenilaian'] ?? '',
+      estimasiWaktu: map['estimasiWaktu'] ?? 60,
+      kompetensiDasar: map['kompetensiDasar'] ?? '',
+      indikatorPencapaian: map['indikatorPencapaian'] ?? '',
+      createdAt: (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      updatedAt: (map['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'judul': judul,
+      'deskripsi': deskripsi,
+      'gambarUrl': gambarUrl,
+      'kegiatanList': kegiatanList.map((kegiatan) => kegiatan.toMap()).toList(),
+      'rubrikPenilaian': rubrikPenilaian,
+      'estimasiWaktu': estimasiWaktu,
+      'kompetensiDasar': kompetensiDasar,
+      'indikatorPencapaian': indikatorPencapaian,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': Timestamp.fromDate(updatedAt),
+    };
+  }
+
+  LKPD copyWith({
+    String? id,
+    String? judul,
+    String? deskripsi,
+    String? gambarUrl,
+    List<Kegiatan>? kegiatanList,
+    String? rubrikPenilaian,
+    int? estimasiWaktu,
+    String? kompetensiDasar,
+    String? indikatorPencapaian,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return LKPD(
+      id: id ?? this.id,
+      judul: judul ?? this.judul,
+      deskripsi: deskripsi ?? this.deskripsi,
+      gambarUrl: gambarUrl ?? this.gambarUrl,
+      kegiatanList: kegiatanList ?? this.kegiatanList,
+      rubrikPenilaian: rubrikPenilaian ?? this.rubrikPenilaian,
+      estimasiWaktu: estimasiWaktu ?? this.estimasiWaktu,
+      kompetensiDasar: kompetensiDasar ?? this.kompetensiDasar,
+      indikatorPencapaian: indikatorPencapaian ?? this.indikatorPencapaian,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+}
+
+// Utility class untuk helper functions LKPD
+class LKPDHelper {
+  static String getKegiatanTypeText(KegiatanType type) {
+    switch (type) {
+      case KegiatanType.observasi:
+        return 'Observasi';
+      case KegiatanType.analisis:
+        return 'Analisis';
+      case KegiatanType.diskusi:
+        return 'Diskusi';
+      case KegiatanType.eksperimen:
+        return 'Eksperimen';
+      case KegiatanType.refleksi:
+        return 'Refleksi';
+      case KegiatanType.tugasIndividu:
+        return 'Tugas Individu';
+      case KegiatanType.tugasKelompok:
+        return 'Tugas Kelompok';
+    }
+  }
+
+  static String getTotalEstimasiWaktu(List<Kegiatan> kegiatanList) {
+    int totalMenit = kegiatanList.fold(0, (sum, kegiatan) => sum + kegiatan.estimasiWaktu);
+    if (totalMenit < 60) {
+      return '$totalMenit menit';
+    } else {
+      int jam = totalMenit ~/ 60;
+      int sisaMenit = totalMenit % 60;
+      if (sisaMenit == 0) {
+        return '$jam jam';
+      } else {
+        return '$jam jam $sisaMenit menit';
+      }
+    }
+  }
+
+  static String getDifficultyLevel(int totalKegiatan) {
+    if (totalKegiatan <= 2) {
+      return 'Mudah';
+    } else if (totalKegiatan <= 4) {
+      return 'Sedang';
+    } else {
+      return 'Sulit';
+    }
+  }
+}

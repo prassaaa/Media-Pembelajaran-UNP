@@ -90,7 +90,7 @@ class AdminDashboard extends StatelessWidget {
                                   color: Colors.white.withOpacity(0.9),
                                 ),
                               ),
-                              const SizedBox(height: 50), // Space for title
+                              const SizedBox(height: 50),
                             ],
                           ),
                         ),
@@ -108,6 +108,7 @@ class AdminDashboard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header Text
                 Text(
                   'Manajemen Konten',
                   style: AppTheme.headingSmall,
@@ -120,7 +121,6 @@ class AdminDashboard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                
                 // Menu Grid
                 Expanded(
                   child: GridView.count(
@@ -138,6 +138,17 @@ class AdminDashboard extends StatelessWidget {
                         () => Navigator.pushNamed(
                           context,
                           AppConstants.routeAdminMateri,
+                        ),
+                      ),
+                      _buildMenuCard(
+                        context,
+                        'LKPD',
+                        'Kelola Lembar Kerja Peserta Didik',
+                        Icons.assignment_outlined,
+                        Colors.orange,
+                        () => Navigator.pushNamed(
+                          context,
+                          AppConstants.routeAdminLkpd,
                         ),
                       ),
                       _buildMenuCard(
@@ -184,8 +195,7 @@ class AdminDashboard extends StatelessWidget {
                     ],
                   ),
                 ),
-                
-                // Tombol Kembali
+                // Back Button
                 AppButton(
                   text: 'Kembali ke Aplikasi',
                   icon: Icons.arrow_back,
@@ -204,6 +214,7 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
+  // Build individual menu card
   Widget _buildMenuCard(
     BuildContext context,
     String title,
@@ -274,11 +285,12 @@ class AdminDashboard extends StatelessWidget {
     );
   }
 
+  // Show change password dialog
   void _showChangePasswordDialog(BuildContext context) {
     final TextEditingController _passwordController = TextEditingController();
     final FirebaseService _firebaseService = FirebaseService();
     bool _isLoading = false;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,

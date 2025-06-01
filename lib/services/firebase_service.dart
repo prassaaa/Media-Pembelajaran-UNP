@@ -13,6 +13,7 @@ class FirebaseService {
   final CollectionReference _evaluasiCollection = FirebaseFirestore.instance.collection('evaluasi');
   final CollectionReference _soalCollection = FirebaseFirestore.instance.collection('soal');
   final CollectionReference _identitasCollection = FirebaseFirestore.instance.collection('identitas');
+  final CollectionReference _lkpdCollection = FirebaseFirestore.instance.collection('lkpd');
 
   // Getter untuk mengakses cPanelService dari luar
   CPanelService get cPanelService => _cPanelService;
@@ -552,6 +553,280 @@ class FirebaseService {
     }
   }
 
+  // ==================== LKPD OPERATIONS ====================
+
+  // Get semua LKPD
+  Stream<List<LKPD>> getLKPD() {
+    return _lkpdCollection
+        .orderBy('updatedAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => LKPD.fromFirestore(doc))
+            .toList());
+  }
+
+  // Get LKPD by ID
+  Future<LKPD?> getLKPDById(String id) async {
+    try {
+      final doc = await _lkpdCollection.doc(id).get();
+      if (doc.exists) {
+        return LKPD.fromFirestore(doc);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting LKPD: $e');
+      return null;
+    }
+  }
+
+  // Add LKPD dengan upload gambar
+  Future<String> addLKPD(LKPD lkpd, File? gambar) async {
+    try {
+      String gambarUrl = lkpd.gambarUrl;
+
+      // Upload gambar utama jika ada
+      if (gambar != null) {
+        print('Uploading LKPD image to cPanel...');
+        String? uploadedUrl = await _cPanelService.uploadImage(gambar);
+        if (uploadedUrl != null) {
+          print('LKPD image uploaded successfully: $uploadedUrl');
+          gambarUrl = uploadedUrl;
+        } else {
+          print('Failed to upload LKPD image');
+        }
+      }
+
+      // Upload gambar untuk setiap kegiatan jika ada
+      List<Kegiatan> updatedKegiatanList = [];
+      for (Kegiatan kegiatan in lkpd.kegiatanList) {
+        String kegiatanGambarUrl = kegiatan.gambarUrl ?? '';
+        
+        // Untuk sekarang kita simpan URL yang sudah ada
+        // Implementasi upload gambar kegiatan akan ditambahkan di form
+        
+        updatedKegiatanList.add(Kegiatan(
+          id: kegiatan.id,
+          judul: kegiatan.judul,
+          instruksi: kegiatan.instruksi,
+          type: kegiatan.type,
+          pertanyaanPemandu: kegiatan.pertanyaanPemandu,
+          gambarUrl: kegiatanGambarUrl,
+          estimasiWaktu: kegiatan.estimasiWaktu,
+        ));
+      }
+
+      // Create LKPD document
+      DocumentReference docRef = await _lkpdCollection.add({
+        'judul': lkpd.judul,
+        'deskripsi': lkpd.deskripsi,
+        'gambarUrl': gambarUrl,
+        'kegiatanList': updatedKegiatanList.map((kegiatan) => kegiatan.toMap()).toList(),
+        'rubrikPenilaian': lkpd.rubrikPenilaian,
+        'estimasiWaktu': lkpd.estimasiWaktu,
+        'kompetensiDasar': lkpd.kompetensiDasar,
+        'indikatorPencapaian': lkpd.indikatorPencapaian,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      print('LKPD created successfully with ID: ${docRef.id}');
+      return docRef.id;
+    } catch (e) {
+      print('Error adding LKPD: $e');
+      throw Exception('Gagal menambahkan LKPD: $e');
+    }
+  }
+
+  // Add LKPD tanpa file (untuk sample data)
+  Future<String> addLKPDData(LKPD lkpd) async {
+    try {
+      DocumentReference docRef = await _lkpdCollection.add(lkpd.toMap());
+      print('LKPD data created successfully with ID: ${docRef.id}');
+      return docRef.id;
+    } catch (e) {
+      print('Error adding LKPD data: $e');
+      throw Exception('Gagal menambahkan LKPD: $e');
+    }
+  }
+
+  // Update LKPD dengan upload gambar
+  Future<void> updateLKPD(LKPD lkpd, File? gambar) async {
+    try {
+      String gambarUrl = lkpd.gambarUrl;
+
+      // Upload gambar utama baru jika ada
+      if (gambar != null) {
+        print('Uploading new LKPD image to cPanel...');
+        String? uploadedUrl = await _cPanelService.uploadImage(gambar);
+        if (uploadedUrl != null) {
+          print('LKPD image updated successfully: $uploadedUrl');
+          gambarUrl = uploadedUrl;
+        } else {
+          print('Failed to upload new LKPD image');
+        }
+      }
+
+      // Process kegiatan list
+      List<Kegiatan> updatedKegiatanList = [];
+      for (Kegiatan kegiatan in lkpd.kegiatanList) {
+        String kegiatanGambarUrl = kegiatan.gambarUrl ?? '';
+        
+        // Implementasi upload gambar kegiatan akan ditambahkan di form
+        
+        updatedKegiatanList.add(Kegiatan(
+          id: kegiatan.id,
+          judul: kegiatan.judul,
+          instruksi: kegiatan.instruksi,
+          type: kegiatan.type,
+          pertanyaanPemandu: kegiatan.pertanyaanPemandu,
+          gambarUrl: kegiatanGambarUrl,
+          estimasiWaktu: kegiatan.estimasiWaktu,
+        ));
+      }
+
+      // Update LKPD document
+      await _lkpdCollection.doc(lkpd.id).update({
+        'judul': lkpd.judul,
+        'deskripsi': lkpd.deskripsi,
+        'gambarUrl': gambarUrl,
+        'kegiatanList': updatedKegiatanList.map((kegiatan) => kegiatan.toMap()).toList(),
+        'rubrikPenilaian': lkpd.rubrikPenilaian,
+        'estimasiWaktu': lkpd.estimasiWaktu,
+        'kompetensiDasar': lkpd.kompetensiDasar,
+        'indikatorPencapaian': lkpd.indikatorPencapaian,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      print('LKPD updated successfully');
+    } catch (e) {
+      print('Error updating LKPD: $e');
+      throw Exception('Gagal mengupdate LKPD: $e');
+    }
+  }
+
+  // Delete LKPD
+  Future<void> deleteLKPD(String id) async {
+    try {
+      // Get LKPD untuk hapus gambar yang terkait
+      final lkpd = await getLKPDById(id);
+      
+      if (lkpd != null) {
+        // Hapus gambar utama jika ada
+        if (lkpd.gambarUrl.isNotEmpty) {
+          // Implementasi hapus gambar dari cPanel bisa ditambahkan nanti
+          print('Should delete main image: ${lkpd.gambarUrl}');
+        }
+        
+        // Hapus gambar kegiatan jika ada
+        for (final kegiatan in lkpd.kegiatanList) {
+          if (kegiatan.gambarUrl != null && kegiatan.gambarUrl!.isNotEmpty) {
+            print('Should delete kegiatan image: ${kegiatan.gambarUrl}');
+          }
+        }
+      }
+      
+      // Hapus document LKPD
+      await _lkpdCollection.doc(id).delete();
+      print('LKPD deleted successfully');
+    } catch (e) {
+      print('Error deleting LKPD: $e');
+      throw Exception('Gagal menghapus LKPD: $e');
+    }
+  }
+
+  // Method untuk upload gambar kegiatan
+  Future<String> uploadKegiatanImage(File imageFile, String lkpdId, String kegiatanId) async {
+    try {
+      String? uploadedUrl = await _cPanelService.uploadImage(imageFile);
+      if (uploadedUrl != null) {
+        print('Kegiatan image uploaded successfully: $uploadedUrl');
+        return uploadedUrl;
+      } else {
+        throw Exception('Failed to upload kegiatan image');
+      }
+    } catch (e) {
+      print('Error uploading kegiatan image: $e');
+      throw Exception('Gagal mengupload gambar kegiatan: $e');
+    }
+  }
+
+  // Preload LKPD - method untuk membuat sample data
+  Future<void> preloadLKPD() async {
+    try {
+      // Cek apakah sudah ada LKPD
+      final QuerySnapshot snapshot = await _lkpdCollection.limit(1).get();
+      
+      if (snapshot.docs.isEmpty) {
+        // Buat sample LKPD
+        final sampleLKPD = LKPD(
+          id: '',
+          judul: 'LKPD 1: Mengenal Hak dan Kewajiban',
+          deskripsi: 'Lembar kerja untuk memahami konsep dasar hak dan kewajiban dalam kehidupan sehari-hari',
+          gambarUrl: '',
+          kompetensiDasar: '3.2 Menganalisis pelaksanaan kewajiban, hak, dan tanggung jawab sebagai warga negara beserta dampaknya dalam kehidupan sehari-hari',
+          indikatorPencapaian: 'Siswa dapat mengidentifikasi dan menganalisis hak dan kewajiban di lingkungan rumah, sekolah, dan masyarakat',
+          rubrikPenilaian: '''
+Kriteria Penilaian:
+• Sangat Baik (90-100): Mampu mengidentifikasi dan menganalisis dengan tepat dan lengkap
+• Baik (80-89): Mampu mengidentifikasi dan menganalisis dengan tepat
+• Cukup (70-79): Mampu mengidentifikasi dengan tepat namun analisis kurang lengkap
+• Perlu Bimbingan (<70): Masih memerlukan bimbingan dalam mengidentifikasi dan menganalisis
+          ''',
+          estimasiWaktu: 90,
+          kegiatanList: [
+            Kegiatan(
+              id: 'kegiatan1',
+              judul: 'Observasi Hak dan Kewajiban di Rumah',
+              instruksi: 'Amati kegiatan di rumahmu selama satu hari. Identifikasi hak dan kewajiban yang kamu miliki sebagai anggota keluarga.',
+              type: KegiatanType.observasi,
+              estimasiWaktu: 30,
+              pertanyaanPemandu: [
+                'Apa saja hak yang kamu miliki di rumah?',
+                'Apa saja kewajiban yang harus kamu lakukan di rumah?',
+                'Mengapa penting untuk melaksanakan kewajiban di rumah?',
+                'Apa yang terjadi jika hak dan kewajiban tidak seimbang?'
+              ],
+            ),
+            Kegiatan(
+              id: 'kegiatan2',
+              judul: 'Analisis Kasus Pelanggaran Hak',
+              instruksi: 'Baca kasus yang diberikan dan analisis pelanggaran hak yang terjadi serta dampaknya.',
+              type: KegiatanType.analisis,
+              estimasiWaktu: 30,
+              pertanyaanPemandu: [
+                'Hak apa yang dilanggar dalam kasus tersebut?',
+                'Siapa yang bertanggung jawab melindungi hak tersebut?',
+                'Apa dampak dari pelanggaran hak tersebut?',
+                'Bagaimana cara mencegah pelanggaran serupa?'
+              ],
+            ),
+            Kegiatan(
+              id: 'kegiatan3',
+              judul: 'Refleksi dan Komitmen',
+              instruksi: 'Buatlah refleksi tentang pembelajaran hari ini dan komitmenmu dalam melaksanakan hak dan kewajiban.',
+              type: KegiatanType.refleksi,
+              estimasiWaktu: 30,
+              pertanyaanPemandu: [
+                'Apa hal baru yang kamu pelajari hari ini?',
+                'Bagaimana kamu akan menerapkan pengetahuan ini dalam kehidupan sehari-hari?',
+                'Komitmen apa yang akan kamu buat untuk menjadi warga yang bertanggung jawab?'
+              ],
+            ),
+          ],
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+        
+        await addLKPDData(sampleLKPD);
+        print('Sample LKPD created successfully');
+      } else {
+        print('LKPD data already exists');
+      }
+    } catch (e) {
+      print('Error preloading LKPD: $e');
+    }
+  }
+
   // ADMIN PASSWORD OPERATIONS
   // PERBAIKAN: Verifikasi password admin yang lebih robust
   Future<bool> verifyAdminPassword(String password) async {
@@ -697,6 +972,7 @@ class FirebaseService {
       await _firestore.collection('video').limit(1).get();
       await _firestore.collection('evaluasi').limit(1).get();
       await _firestore.collection('soal').limit(1).get();
+      await _firestore.collection('lkpd').limit(1).get(); // Tambah LKPD
       
       print('Database initialized successfully');
     } catch (e) {

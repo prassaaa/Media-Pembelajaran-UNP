@@ -165,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        // Tutorial Steps
+                        // Tutorial Steps - TAMBAH LKPD
                         _buildTutorialStep(
                           number: '1',
                           icon: Icons.menu_book_rounded,
@@ -183,6 +183,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 16),
                         _buildTutorialStep(
                           number: '2',
+                          icon: Icons.assignment_outlined,
+                          color: Colors.orange,
+                          title: 'LKPD (Lembar Kerja Peserta Didik)',
+                          description:
+                              'Kerjakan aktivitas pembelajaran terstruktur untuk memahami materi dengan lebih mendalam melalui kegiatan praktis.',
+                          tips: [
+                            'Buka menu "LKPD"',
+                            'Pilih LKPD yang sesuai dengan materi',
+                            'Ikuti petunjuk setiap kegiatan',
+                            'Jawab pertanyaan pemandu dengan baik',
+                            'Selesaikan semua tahapan pembelajaran'
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTutorialStep(
+                          number: '3',
                           icon: Icons.play_circle_fill_rounded,
                           color: AppTheme.accentColor,
                           title: 'Video Pembelajaran',
@@ -197,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 16),
                         _buildTutorialStep(
-                          number: '3',
+                          number: '4',
                           icon: Icons.quiz_rounded,
                           color: AppTheme.successColor,
                           title: 'Evaluasi Belajar',
@@ -245,6 +261,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               const SizedBox(height: 12),
                               _buildTipItem('Belajar secara bertahap dan konsisten'),
                               _buildTipItem('Catat poin-poin penting dari materi'),
+                              _buildTipItem('Kerjakan LKPD untuk pembelajaran aktif'),
                               _buildTipItem('Kerjakan evaluasi untuk mengukur pemahaman'),
                               _buildTipItem('Ulangi materi yang belum dipahami'),
                               _buildTipItem('Manfaatkan video untuk visualisasi konsep'),
@@ -691,7 +708,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // Feature Grid
+            // Feature Grid - SEKARANG 4 MENU (TAMBAH LKPD)
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -764,6 +781,18 @@ class _HomeScreenState extends State<HomeScreen> {
                             () => Navigator.pushNamed(
                               context,
                               AppConstants.routeMateri,
+                            ),
+                          ),
+                          // TAMBAH LKPD CARD
+                          _buildFeatureCard(
+                            context,
+                            'LKPD',
+                            'Lembar Kerja Peserta Didik interaktif',
+                            Icons.assignment_outlined,
+                            Colors.orange,
+                            () => Navigator.pushNamed(
+                              context,
+                              AppConstants.routeLkpd,
                             ),
                           ),
                           _buildFeatureCard(
