@@ -23,7 +23,7 @@ import 'package:pembelajaran_app/services/firebase_service.dart';
 import 'package:pembelajaran_app/screens/identitas_screen.dart';
 import 'package:pembelajaran_app/screens/admin/admin_identitas_form.dart';
 
-// IMPORT BARU UNTUK LKPD
+// IMPORT LKPD
 import 'package:pembelajaran_app/screens/lkpd/lkpd_screen.dart';
 import 'package:pembelajaran_app/screens/lkpd/lkpd_detail_screen.dart';
 import 'package:pembelajaran_app/screens/admin/admin_lkpd_screen.dart';
@@ -31,15 +31,48 @@ import 'package:pembelajaran_app/screens/admin/admin_lkpd_form.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  await FirebaseService().preloadVideos();
-  await FirebaseService().preloadMateri();
-  await FirebaseService().preloadLKPD(); // TAMBAH PRELOAD LKPD
-  // Setup admin password jika belum ada
-  final FirebaseService firebaseService = FirebaseService();
-  await firebaseService.setupAdminPassword();
+  
+  try {
+    // ✅ FIREBASE INITIALIZATION dengan error handling
+    print('🚀 Initializing Firebase...');
+    await Firebase.initializeApp();
+    print('✅ Firebase initialized successfully');
+    
+    // ✅ SETUP ADMIN PASSWORD dengan retry mechanism
+    await _setupAdminWithRetry();
+    
+  } catch (e) {
+    print('❌ Firebase initialization error: $e');
+    // Tetap jalankan aplikasi meskipun Firebase gagal
+  }
   
   runApp(const MyApp());
+}
+
+// ✅ FUNCTION DENGAN RETRY MECHANISM
+Future<void> _setupAdminWithRetry() async {
+  int maxRetries = 3;
+  int currentTry = 0;
+  
+  while (currentTry < maxRetries) {
+    try {
+      print('🔧 Setting up admin password (attempt ${currentTry + 1}/$maxRetries)...');
+      final FirebaseService firebaseService = FirebaseService();
+      await firebaseService.setupAdminPassword();
+      print('✅ Admin password setup completed');
+      return; // Success, exit loop
+    } catch (e) {
+      currentTry++;
+      print('❌ Admin setup attempt $currentTry failed: $e');
+      
+      if (currentTry < maxRetries) {
+        print('⏳ Retrying in 2 seconds...');
+        await Future.delayed(const Duration(seconds: 2));
+      } else {
+        print('❌ Max retries reached. Admin setup will be attempted later.');
+      }
+    }
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -67,7 +100,7 @@ class MyApp extends StatelessWidget {
         AppConstants.routeHasil: (context) => const HasilScreen(),
         AppConstants.routeIdentitas: (context) => const IdentitasScreen(),
         
-        // LKPD Routes - BARU
+        // LKPD Routes
         AppConstants.routeLkpd: (context) => const LkpdScreen(),
         AppConstants.routeLkpdDetail: (context) => const LkpdDetailScreen(),
         
@@ -82,7 +115,7 @@ class MyApp extends StatelessWidget {
         AppConstants.routeAdminSoalForm: (context) => const AdminSoalForm(),
         AppConstants.routeAdminIdentitas: (context) => const AdminIdentitasForm(),
         
-        // Admin LKPD Routes - BARU
+        // Admin LKPD Routes
         AppConstants.routeAdminLkpd: (context) => const AdminLkpdScreen(),
         AppConstants.routeAdminLkpdForm: (context) => const AdminLkpdForm(),
       },

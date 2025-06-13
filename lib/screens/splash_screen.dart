@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:pembelajaran_app/config/constants.dart';
 import 'package:pembelajaran_app/config/theme.dart';
+import 'package:pembelajaran_app/services/firebase_service.dart'; // ✅ TAMBAH IMPORT
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -24,23 +25,23 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   late Animation<double> _profileCardSlideAnimation;
   late Animation<double> _loadingFadeAnimation;
 
+  // ✅ LOADING STATUS
+  String _loadingText = 'Memuat aplikasi pembelajaran...';
+
   @override
   void initState() {
     super.initState();
     
-    // Main animation controller untuk sequence
     _mainAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3000),
     );
     
-    // Logo animation controller untuk animasi khusus logo
     _logoAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
     
-    // Text animation controller
     _textAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
@@ -49,16 +50,80 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     _setupAnimations();
     _startAnimationSequence();
     
-    // Timer untuk berpindah ke halaman utama
-    Timer(const Duration(seconds: 4), () {
+    // ✅ START BACKGROUND LOADING
+    _startBackgroundLoading();
+    
+    // ✅ TIMER LEBIH PENDEK KARENA LOADING DI BACKGROUND
+    Timer(const Duration(seconds: 3), () {
       if (mounted) {
         Navigator.pushReplacementNamed(context, AppConstants.routeHome);
       }
     });
   }
 
+  // ✅ BACKGROUND LOADING TANPA BLOCKING UI
+  void _startBackgroundLoading() async {
+    final firebaseService = FirebaseService();
+    
+    try {
+      // Update loading text
+      if (mounted) {
+        setState(() {
+          _loadingText = 'Menyiapkan data video...';
+        });
+      }
+      
+      // Load video di background (tidak await)
+      firebaseService.preloadVideos().catchError((e) {
+        print('Background video load error: $e');
+      });
+      
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      if (mounted) {
+        setState(() {
+          _loadingText = 'Menyiapkan materi pembelajaran...';
+        });
+      }
+      
+      // Load materi di background (tidak await)
+      firebaseService.preloadMateri().catchError((e) {
+        print('Background materi load error: $e');
+      });
+      
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      if (mounted) {
+        setState(() {
+          _loadingText = 'Menyiapkan LKPD...';
+        });
+      }
+      
+      // Load LKPD di background (tidak await)
+      firebaseService.preloadLKPD().catchError((e) {
+        print('Background LKPD load error: $e');
+      });
+      
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      if (mounted) {
+        setState(() {
+          _loadingText = 'Siap digunakan!';
+        });
+      }
+      
+    } catch (e) {
+      print('Background loading error: $e');
+      if (mounted) {
+        setState(() {
+          _loadingText = 'Siap digunakan!';
+        });
+      }
+    }
+  }
+
   void _setupAnimations() {
-    // Logo animations - fade in dari atas dengan bounce
+    // ... sama seperti sebelumnya
     _logoFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _logoAnimationController,
@@ -73,7 +138,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       ),
     );
     
-    // Title animations
     _titleFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _textAnimationController,
@@ -88,7 +152,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       ),
     );
     
-    // Subtitle animations
     _subtitleFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _textAnimationController,
@@ -96,7 +159,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       ),
     );
     
-    // Profile card animations
     _profileCardFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _mainAnimationController,
@@ -111,7 +173,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
       ),
     );
     
-    // Loading animations
     _loadingFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _mainAnimationController,
@@ -121,14 +182,11 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   }
 
   void _startAnimationSequence() async {
-    // Start logo animation first
     _logoAnimationController.forward();
     
-    // Wait a bit then start text animations
     await Future.delayed(const Duration(milliseconds: 400));
     _textAnimationController.forward();
     
-    // Start main animation for other elements
     await Future.delayed(const Duration(milliseconds: 200));
     _mainAnimationController.forward();
   }
@@ -377,7 +435,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                     
                     const SizedBox(height: 50),
                     
-                    // Loading indicator dengan animasi fade
+                    // Loading indicator dengan animasi fade dan dynamic text
                     AnimatedBuilder(
                       animation: _loadingFadeAnimation,
                       builder: (context, child) {
@@ -397,11 +455,17 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              Text(
-                                'Memuat aplikasi pembelajaran...',
-                                style: AppTheme.bodyMedium.copyWith(
-                                  color: Colors.white.withOpacity(0.8),
-                                  fontWeight: FontWeight.w500,
+                              // ✅ DYNAMIC LOADING TEXT
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                child: Text(
+                                  _loadingText,
+                                  key: ValueKey(_loadingText),
+                                  style: AppTheme.bodyMedium.copyWith(
+                                    color: Colors.white.withOpacity(0.8),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             ],

@@ -119,6 +119,63 @@ class _AdminLkpdFormState extends State<AdminLkpdForm> {
     );
   }
 
+  void _showKegiatanImagePickerOptions(StateSetter setDialogState, Function(File?) onImageSelected) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Pilih Gambar Kegiatan',
+                  style: AppTheme.subtitleLarge,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildImageSourceOption(
+                      icon: Icons.photo_library,
+                      label: 'Galeri',
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+                        if (pickedFile != null) {
+                          setDialogState(() {
+                            onImageSelected(File(pickedFile.path));
+                          });
+                        }
+                      },
+                    ),
+                    _buildImageSourceOption(
+                      icon: Icons.camera_alt,
+                      label: 'Kamera',
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final XFile? pickedFile = await _picker.pickImage(source: ImageSource.camera);
+                        if (pickedFile != null) {
+                          setDialogState(() {
+                            onImageSelected(File(pickedFile.path));
+                          });
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildImageSourceOption({
     required IconData icon,
     required String label,
@@ -160,7 +217,9 @@ class _AdminLkpdFormState extends State<AdminLkpdForm> {
     final TextEditingController instruksiController = TextEditingController();
     KegiatanType selectedType = KegiatanType.observasi;
     int estimasiWaktu = 30;
-    List<String> pertanyaanPemandu = [''];
+    List<TextEditingController> pertanyaanControllers = [TextEditingController()];
+    File? kegiatanGambarFile;
+    String kegiatanGambarUrl = '';
 
     showDialog(
       context: context,
@@ -190,23 +249,34 @@ class _AdminLkpdFormState extends State<AdminLkpdForm> {
                       
                       // Tipe Kegiatan
                       DropdownButtonFormField<KegiatanType>(
-                        value: selectedType,
-                        decoration: const InputDecoration(
-                          labelText: 'Tipe Kegiatan',
-                          border: OutlineInputBorder(),
+                          value: selectedType,
+                          decoration: const InputDecoration(
+                            labelText: 'Tipe Kegiatan',
+                            border: OutlineInputBorder(),
+                          ),
+                          style: const TextStyle(
+                            color: Colors.black, // Pastikan text berwarna hitam
+                            fontSize: 16,
+                          ),
+                          dropdownColor: Colors.white, // Background dropdown putih
+                          items: KegiatanType.values.map((type) {
+                            return DropdownMenuItem(
+                              value: type,
+                              child: Text(
+                                LKPDHelper.getKegiatanTypeText(type),
+                                style: const TextStyle(
+                                  color: Colors.black, // Text item berwarna hitam
+                                  fontSize: 16,
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setDialogState(() {
+                              selectedType = value!;
+                            });
+                          },
                         ),
-                        items: KegiatanType.values.map((type) {
-                          return DropdownMenuItem(
-                            value: type,
-                            child: Text(LKPDHelper.getKegiatanTypeText(type)),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setDialogState(() {
-                            selectedType = value!;
-                          });
-                        },
-                      ),
                       const SizedBox(height: 16),
                       
                       // Estimasi Waktu
@@ -245,54 +315,158 @@ class _AdminLkpdFormState extends State<AdminLkpdForm> {
                       ),
                       const SizedBox(height: 16),
                       
-                      // Pertanyaan Pemandu
+                      // Gambar Kegiatan
                       Text(
-                        'Pertanyaan Pemandu',
+                        'Gambar Kegiatan (Opsional)',
                         style: AppTheme.subtitleMedium.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      ...pertanyaanPemandu.asMap().entries.map((entry) {
+                      InkWell(
+                        onTap: () => _showKegiatanImagePickerOptions(setDialogState, (file) {
+                          kegiatanGambarFile = file;
+                        }),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          height: 150,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: Colors.orange.withOpacity(0.05),
+                            border: Border.all(
+                              color: Colors.orange.withOpacity(0.3),
+                              width: 2,
+                            ),
+                          ),
+                          child: kegiatanGambarFile != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.file(
+                                    kegiatanGambarFile!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.add_photo_alternate,
+                                        size: 32,
+                                        color: Colors.orange.withOpacity(0.7),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Tap untuk menambah gambar',
+                                        style: AppTheme.bodySmall.copyWith(
+                                          color: Colors.orange.withOpacity(0.7),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Pertanyaan Pemandu
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Pertanyaan Pemandu',
+                            style: AppTheme.subtitleMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          TextButton.icon(
+                            onPressed: () {
+                              setDialogState(() {
+                                pertanyaanControllers.add(TextEditingController());
+                              });
+                            },
+                            icon: const Icon(Icons.add, size: 16),
+                            label: const Text('Tambah'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.orange,
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ...pertanyaanControllers.asMap().entries.map((entry) {
                         final index = entry.key;
+                        final controller = entry.value;
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.only(bottom: 12),
                           child: Row(
                             children: [
                               Expanded(
                                 child: TextField(
+                                  controller: controller,
                                   decoration: InputDecoration(
                                     labelText: 'Pertanyaan ${index + 1}',
                                     border: const OutlineInputBorder(),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
                                   ),
-                                  onChanged: (value) {
-                                    pertanyaanPemandu[index] = value;
-                                  },
+                                  maxLines: 2,
                                 ),
                               ),
+                              const SizedBox(width: 8),
                               IconButton(
-                                onPressed: pertanyaanPemandu.length > 1
+                                onPressed: pertanyaanControllers.length > 1
                                     ? () {
                                         setDialogState(() {
-                                          pertanyaanPemandu.removeAt(index);
+                                          controller.dispose();
+                                          pertanyaanControllers.removeAt(index);
                                         });
                                       }
                                     : null,
                                 icon: const Icon(Icons.remove_circle),
-                                color: Colors.red,
+                                color: pertanyaanControllers.length > 1 
+                                    ? Colors.red 
+                                    : Colors.grey,
                               ),
                             ],
                           ),
                         );
                       }).toList(),
-                      TextButton.icon(
-                        onPressed: () {
-                          setDialogState(() {
-                            pertanyaanPemandu.add('');
-                          });
-                        },
-                        icon: const Icon(Icons.add),
-                        label: const Text('Tambah Pertanyaan'),
+                      
+                      const SizedBox(height: 8),
+                      
+                      // Info minimum pertanyaan
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.blue.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.info_outline,
+                              color: Colors.blue,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Minimal 1 pertanyaan diperlukan untuk setiap kegiatan',
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: Colors.blue.shade700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -300,29 +474,75 @@ class _AdminLkpdFormState extends State<AdminLkpdForm> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () {
+                    for (final controller in pertanyaanControllers) {
+                      controller.dispose();
+                    }
+                    Navigator.pop(context);
+                  },
                   child: const Text('Batal'),
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    if (judulKegiatanController.text.isNotEmpty &&
-                        instruksiController.text.isNotEmpty) {
-                      final kegiatan = Kegiatan(
-                        id: 'kegiatan_${DateTime.now().millisecondsSinceEpoch}',
-                        judul: judulKegiatanController.text,
-                        instruksi: instruksiController.text,
-                        type: selectedType,
-                        pertanyaanPemandu: pertanyaanPemandu.where((p) => p.isNotEmpty).toList(),
-                        estimasiWaktu: estimasiWaktu,
+                    // Validasi input
+                    if (judulKegiatanController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Judul kegiatan tidak boleh kosong'),
+                          backgroundColor: AppTheme.errorColor,
+                        ),
                       );
-                      
-                      setState(() {
-                        _kegiatanList.add(kegiatan);
-                        _updateEstimasiWaktu();
-                      });
-                      
-                      Navigator.pop(context);
+                      return;
                     }
+                    
+                    if (instruksiController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Instruksi kegiatan tidak boleh kosong'),
+                          backgroundColor: AppTheme.errorColor,
+                        ),
+                      );
+                      return;
+                    }
+                    
+                    // Ambil pertanyaan yang tidak kosong
+                    List<String> pertanyaanList = pertanyaanControllers
+                        .map((controller) => controller.text.trim())
+                        .where((text) => text.isNotEmpty)
+                        .toList();
+                    
+                    if (pertanyaanList.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Minimal 1 pertanyaan harus diisi'),
+                          backgroundColor: AppTheme.errorColor,
+                        ),
+                      );
+                      return;
+                    }
+                    
+                    final kegiatan = Kegiatan(
+                      id: 'kegiatan_${DateTime.now().millisecondsSinceEpoch}',
+                      judul: judulKegiatanController.text.trim(),
+                      instruksi: instruksiController.text.trim(),
+                      type: selectedType,
+                      pertanyaanPemandu: pertanyaanList,
+                      estimasiWaktu: estimasiWaktu,
+                      gambarUrl: kegiatanGambarUrl,
+                      gambarFile: kegiatanGambarFile, // Simpan file gambar untuk upload nanti
+                    );
+                    
+                    setState(() {
+                      _kegiatanList.add(kegiatan);
+                      _updateEstimasiWaktu();
+                    });
+                    
+                    // Dispose controllers
+                    for (final controller in pertanyaanControllers) {
+                      controller.dispose();
+                    }
+                    
+                    Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange,
@@ -783,6 +1003,41 @@ class _AdminLkpdFormState extends State<AdminLkpdForm> {
                                   ],
                                 ),
                                 const SizedBox(height: 12),
+                                
+                                // Gambar kegiatan jika ada
+                                if (kegiatan.gambarFile != null || (kegiatan.gambarUrl != null && kegiatan.gambarUrl!.isNotEmpty)) ...[
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: kegiatan.gambarFile != null
+                                        ? Image.file(
+                                            kegiatan.gambarFile!,
+                                            height: 120,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Image.network(
+                                            kegiatan.gambarUrl!,
+                                            height: 120,
+                                            width: double.infinity,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Container(
+                                                height: 120,
+                                                width: double.infinity,
+                                                color: Colors.grey.withOpacity(0.3),
+                                                child: const Center(
+                                                  child: Icon(
+                                                    Icons.broken_image,
+                                                    color: Colors.grey,
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+                                
                                 Text(
                                   kegiatan.instruksi,
                                   style: AppTheme.bodyMedium,
@@ -796,6 +1051,52 @@ class _AdminLkpdFormState extends State<AdminLkpdForm> {
                                     color: Colors.grey,
                                   ),
                                 ),
+                                
+                                // Preview pertanyaan pemandu
+                                if (kegiatan.pertanyaanPemandu.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Pertanyaan:',
+                                          style: AppTheme.bodySmall.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        ...kegiatan.pertanyaanPemandu.take(2).map((pertanyaan) => 
+                                          Padding(
+                                            padding: const EdgeInsets.only(bottom: 2),
+                                            child: Text(
+                                              '• ${pertanyaan}',
+                                              style: AppTheme.bodySmall.copyWith(
+                                                color: Colors.grey.shade600,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ).toList(),
+                                        if (kegiatan.pertanyaanPemandu.length > 2)
+                                          Text(
+                                            '... dan ${kegiatan.pertanyaanPemandu.length - 2} pertanyaan lainnya',
+                                            style: AppTheme.bodySmall.copyWith(
+                                              color: Colors.grey.shade500,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           );

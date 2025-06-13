@@ -312,6 +312,7 @@ class Kegiatan {
   final KegiatanType type;
   final List<String> pertanyaanPemandu;
   final String? gambarUrl;
+  final File? gambarFile; // Tambahan untuk support upload gambar
   final int estimasiWaktu; // dalam menit
 
   Kegiatan({
@@ -321,6 +322,7 @@ class Kegiatan {
     required this.type,
     required this.pertanyaanPemandu,
     this.gambarUrl,
+    this.gambarFile, // Parameter baru
     required this.estimasiWaktu,
   });
 
@@ -335,6 +337,7 @@ class Kegiatan {
       ),
       pertanyaanPemandu: List<String>.from(map['pertanyaanPemandu'] ?? []),
       gambarUrl: map['gambarUrl'],
+      // gambarFile tidak disimpan di Firestore, hanya untuk temporary use
       estimasiWaktu: map['estimasiWaktu'] ?? 10,
     );
   }
@@ -350,6 +353,52 @@ class Kegiatan {
       'estimasiWaktu': estimasiWaktu,
     };
   }
+
+  // Method copyWith untuk membuat salinan dengan perubahan
+  Kegiatan copyWith({
+    String? id,
+    String? judul,
+    String? instruksi,
+    KegiatanType? type,
+    List<String>? pertanyaanPemandu,
+    String? gambarUrl,
+    File? gambarFile,
+    int? estimasiWaktu,
+  }) {
+    return Kegiatan(
+      id: id ?? this.id,
+      judul: judul ?? this.judul,
+      instruksi: instruksi ?? this.instruksi,
+      type: type ?? this.type,
+      pertanyaanPemandu: pertanyaanPemandu ?? this.pertanyaanPemandu,
+      gambarUrl: gambarUrl ?? this.gambarUrl,
+      gambarFile: gambarFile ?? this.gambarFile,
+      estimasiWaktu: estimasiWaktu ?? this.estimasiWaktu,
+    );
+  }
+
+  // Helper methods untuk mengelola gambar
+  bool get hasImage => (gambarUrl != null && gambarUrl!.isNotEmpty) || gambarFile != null;
+  bool get hasNewImage => gambarFile != null;
+  bool get hasExistingImage => gambarUrl != null && gambarUrl!.isNotEmpty && gambarFile == null;
+
+  @override
+  String toString() {
+    return 'Kegiatan(id: $id, judul: $judul, type: $type, hasImage: $hasImage)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is Kegiatan &&
+        other.id == id &&
+        other.judul == judul &&
+        other.instruksi == instruksi &&
+        other.type == type;
+  }
+
+  @override
+  int get hashCode => id.hashCode ^ judul.hashCode ^ instruksi.hashCode ^ type.hashCode;
 }
 
 class LKPD {
@@ -444,6 +493,16 @@ class LKPD {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  // Helper methods untuk LKPD
+  List<Kegiatan> get kegiatanWithImages => kegiatanList.where((k) => k.hasImage).toList();
+  int get totalKegiatanWithImages => kegiatanWithImages.length;
+  bool get hasAnyKegiatanImages => kegiatanList.any((k) => k.hasImage);
+
+  @override
+  String toString() {
+    return 'LKPD(id: $id, judul: $judul, totalKegiatan: ${kegiatanList.length})';
+  }
 }
 
 // Utility class untuk helper functions LKPD
@@ -490,5 +549,118 @@ class LKPDHelper {
     } else {
       return 'Sulit';
     }
+  }
+
+  // Helper method untuk mendapatkan icon kegiatan
+  static String getKegiatanIcon(KegiatanType type) {
+    switch (type) {
+      case KegiatanType.observasi:
+        return '👁️';
+      case KegiatanType.analisis:
+        return '📊';
+      case KegiatanType.diskusi:
+        return '💬';
+      case KegiatanType.eksperimen:
+        return '🧪';
+      case KegiatanType.refleksi:
+        return '🤔';
+      case KegiatanType.tugasIndividu:
+        return '👤';
+      case KegiatanType.tugasKelompok:
+        return '👥';
+    }
+  }
+
+  // Helper method untuk mendapatkan warna kegiatan
+  static String getKegiatanColor(KegiatanType type) {
+    switch (type) {
+      case KegiatanType.observasi:
+        return '#4CAF50'; // Green
+      case KegiatanType.analisis:
+        return '#2196F3'; // Blue
+      case KegiatanType.diskusi:
+        return '#FF9800'; // Orange
+      case KegiatanType.eksperimen:
+        return '#9C27B0'; // Purple
+      case KegiatanType.refleksi:
+        return '#607D8B'; // Blue Grey
+      case KegiatanType.tugasIndividu:
+        return '#795548'; // Brown
+      case KegiatanType.tugasKelompok:
+        return '#E91E63'; // Pink
+    }
+  }
+
+  // Helper method untuk validasi LKPD
+  static List<String> validateLKPD(LKPD lkpd) {
+    List<String> errors = [];
+    
+    if (lkpd.judul.trim().isEmpty) {
+      errors.add('Judul LKPD tidak boleh kosong');
+    }
+    
+    if (lkpd.deskripsi.trim().isEmpty) {
+      errors.add('Deskripsi LKPD tidak boleh kosong');
+    }
+    
+    if (lkpd.kompetensiDasar.trim().isEmpty) {
+      errors.add('Kompetensi Dasar tidak boleh kosong');
+    }
+    
+    if (lkpd.indikatorPencapaian.trim().isEmpty) {
+      errors.add('Indikator Pencapaian tidak boleh kosong');
+    }
+    
+    if (lkpd.rubrikPenilaian.trim().isEmpty) {
+      errors.add('Rubrik Penilaian tidak boleh kosong');
+    }
+    
+    if (lkpd.kegiatanList.isEmpty) {
+      errors.add('Minimal satu kegiatan harus ditambahkan');
+    }
+    
+    // Validasi setiap kegiatan
+    for (int i = 0; i < lkpd.kegiatanList.length; i++) {
+      final kegiatan = lkpd.kegiatanList[i];
+      if (kegiatan.judul.trim().isEmpty) {
+        errors.add('Judul kegiatan ${i + 1} tidak boleh kosong');
+      }
+      if (kegiatan.instruksi.trim().isEmpty) {
+        errors.add('Instruksi kegiatan ${i + 1} tidak boleh kosong');
+      }
+      if (kegiatan.pertanyaanPemandu.isEmpty) {
+        errors.add('Kegiatan ${i + 1} harus memiliki minimal satu pertanyaan pemandu');
+      }
+    }
+    
+    return errors;
+  }
+
+  // Helper method untuk menghitung statistik LKPD
+  static Map<String, dynamic> getLKPDStatistics(LKPD lkpd) {
+    Map<KegiatanType, int> typeCount = {};
+    for (var type in KegiatanType.values) {
+      typeCount[type] = 0;
+    }
+    
+    int totalPertanyaan = 0;
+    int kegiatanWithImages = 0;
+    
+    for (var kegiatan in lkpd.kegiatanList) {
+      typeCount[kegiatan.type] = (typeCount[kegiatan.type] ?? 0) + 1;
+      totalPertanyaan += kegiatan.pertanyaanPemandu.length;
+      if (kegiatan.hasImage) {
+        kegiatanWithImages++;
+      }
+    }
+    
+    return {
+      'totalKegiatan': lkpd.kegiatanList.length,
+      'totalPertanyaan': totalPertanyaan,
+      'estimasiWaktu': lkpd.estimasiWaktu,
+      'tingkatKesulitan': getDifficultyLevel(lkpd.kegiatanList.length),
+      'kegiatanDenganGambar': kegiatanWithImages,
+      'distribusiTipeKegiatan': typeCount,
+    };
   }
 }

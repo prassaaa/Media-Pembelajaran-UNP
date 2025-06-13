@@ -15,20 +15,193 @@ class FirebaseService {
   final CollectionReference _identitasCollection = FirebaseFirestore.instance.collection('identitas');
   final CollectionReference _lkpdCollection = FirebaseFirestore.instance.collection('lkpd');
 
+  // ✅ CACHE YANG TIDAK BLOCKING - OPTIONAL CACHING
+  static List<Video>? _cachedVideos;
+  static List<Materi>? _cachedMateri;
+  static List<LKPD>? _cachedLKPD;
+
   // Getter untuk mengakses cPanelService dari luar
   CPanelService get cPanelService => _cPanelService;
 
-  // MATERI OPERATIONS
-  // Get semua materi
+  // ✅ PRELOAD METHODS - BACKGROUND ONLY, TIDAK BLOCKING
+  Future<void> preloadVideos() async {
+    try {
+      print('🎥 Background video preload started...');
+      final QuerySnapshot snapshot = await _videoCollection
+          .orderBy('createdAt', descending: true)
+          .get();
+      
+      _cachedVideos = snapshot.docs
+          .map((doc) => Video.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+          .toList();
+      
+      print('✅ Video preload completed: ${_cachedVideos!.length} items');
+    } catch (e) {
+      print('❌ Video preload error: $e');
+    }
+  }
+
+  Future<void> preloadMateri() async {
+    try {
+      print('📚 Background materi preload started...');
+      final QuerySnapshot snapshot = await _materiCollection
+          .orderBy('createdAt', descending: true)
+          .get();
+      
+      _cachedMateri = snapshot.docs
+          .map((doc) => Materi.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+          .toList();
+      
+      print('✅ Materi preload completed: ${_cachedMateri!.length} items');
+    } catch (e) {
+      print('❌ Materi preload error: $e');
+    }
+  }
+
+  Future<void> preloadLKPD() async {
+    try {
+      print('📝 Background LKPD preload started...');
+      
+      // Cek apakah collection kosong dan buat sample data
+      final QuerySnapshot checkSnapshot = await _lkpdCollection.limit(1).get();
+      if (checkSnapshot.docs.isEmpty) {
+        print('📝 No LKPD data found, creating sample...');
+        await _createSampleLKPD();
+      }
+      
+      final QuerySnapshot snapshot = await _lkpdCollection
+          .orderBy('updatedAt', descending: true)
+          .get();
+      
+      _cachedLKPD = snapshot.docs
+          .map((doc) => LKPD.fromFirestore(doc))
+          .toList();
+      
+      print('✅ LKPD preload completed: ${_cachedLKPD!.length} items');
+    } catch (e) {
+      print('❌ LKPD preload error: $e');
+    }
+  }
+
+  // ✅ FIXED GETTERS - SELALU RETURN DATA DARI FIRESTORE, CACHE HANYA UNTUK OPTIMASI
+  Stream<List<Video>> getVideos() {
+    return _videoCollection
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      final videos = snapshot.docs
+          .map((doc) => Video.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+          .toList();
+      
+      // Update cache di background
+      _cachedVideos = videos;
+      
+      return videos;
+    });
+  }
+
   Stream<List<Materi>> getMateri() {
     return _materiCollection
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Materi.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-            .toList());
+        .map((snapshot) {
+      final materi = snapshot.docs
+          .map((doc) => Materi.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+          .toList();
+      
+      // Update cache di background
+      _cachedMateri = materi;
+      
+      return materi;
+    });
   }
 
+  Stream<List<LKPD>> getLKPD() {
+    return _lkpdCollection
+        .orderBy('updatedAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      final lkpd = snapshot.docs
+          .map((doc) => LKPD.fromFirestore(doc))
+          .toList();
+      
+      // Update cache di background
+      _cachedLKPD = lkpd;
+      
+      return lkpd;
+    });
+  }
+
+  // ✅ SAMPLE DATA CREATION
+  Future<void> _createSampleLKPD() async {
+    try {
+      final sampleLKPD = LKPD(
+        id: '',
+        judul: 'LKPD 1: Mengenal Hak dan Kewajiban',
+        deskripsi: 'Lembar kerja untuk memahami konsep dasar hak dan kewajiban dalam kehidupan sehari-hari',
+        gambarUrl: '',
+        kompetensiDasar: '3.2 Menganalisis pelaksanaan kewajiban, hak, dan tanggung jawab sebagai warga negara beserta dampaknya dalam kehidupan sehari-hari',
+        indikatorPencapaian: 'Siswa dapat mengidentifikasi dan menganalisis hak dan kewajiban di lingkungan rumah, sekolah, dan masyarakat',
+        rubrikPenilaian: '''
+Kriteria Penilaian:
+- Sangat Baik (90-100): Mampu mengidentifikasi dan menganalisis dengan tepat dan lengkap
+- Baik (80-89): Mampu mengidentifikasi dan menganalisis dengan tepat
+- Cukup (70-79): Mampu mengidentifikasi dengan tepat namun analisis kurang lengkap
+- Perlu Bimbingan (<70): Masih memerlukan bimbingan dalam mengidentifikasi dan menganalisis
+        ''',
+        estimasiWaktu: 90,
+        kegiatanList: [
+          Kegiatan(
+            id: 'kegiatan1',
+            judul: 'Observasi Hak dan Kewajiban di Rumah',
+            instruksi: 'Amati kegiatan di rumahmu selama satu hari. Identifikasi hak dan kewajiban yang kamu miliki sebagai anggota keluarga.',
+            type: KegiatanType.observasi,
+            estimasiWaktu: 30,
+            pertanyaanPemandu: [
+              'Apa saja hak yang kamu miliki di rumah?',
+              'Apa saja kewajiban yang harus kamu lakukan di rumah?',
+              'Mengapa penting untuk melaksanakan kewajiban di rumah?',
+              'Apa yang terjadi jika hak dan kewajiban tidak seimbang?'
+            ],
+          ),
+          Kegiatan(
+            id: 'kegiatan2',
+            judul: 'Analisis Kasus Pelanggaran Hak',
+            instruksi: 'Baca kasus yang diberikan dan analisis pelanggaran hak yang terjadi serta dampaknya.',
+            type: KegiatanType.analisis,
+            estimasiWaktu: 30,
+            pertanyaanPemandu: [
+              'Hak apa yang dilanggar dalam kasus tersebut?',
+              'Siapa yang bertanggung jawab melindungi hak tersebut?',
+              'Apa dampak dari pelanggaran hak tersebut?',
+              'Bagaimana cara mencegah pelanggaran serupa?'
+            ],
+          ),
+          Kegiatan(
+            id: 'kegiatan3',
+            judul: 'Refleksi dan Komitmen',
+            instruksi: 'Buatlah refleksi tentang pembelajaran hari ini dan komitmenmu dalam melaksanakan hak dan kewajiban.',
+            type: KegiatanType.refleksi,
+            estimasiWaktu: 30,
+            pertanyaanPemandu: [
+              'Apa hal baru yang kamu pelajari hari ini?',
+              'Bagaimana kamu akan menerapkan pengetahuan ini dalam kehidupan sehari-hari?',
+              'Komitmen apa yang akan kamu buat untuk menjadi warga yang bertanggung jawab?'
+            ],
+          ),
+        ],
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+      
+      await addLKPDData(sampleLKPD);
+      print('✅ Sample LKPD created');
+    } catch (e) {
+      print('❌ Error creating sample LKPD: $e');
+    }
+  }
+
+  // MATERI OPERATIONS
   // Get materi by ID
   Future<Materi> getMateriById(String id) async {
     DocumentSnapshot doc = await _materiCollection.doc(id).get();
@@ -193,16 +366,6 @@ class FirebaseService {
   }
 
   // VIDEO OPERATIONS
-  // Get semua video
-  Stream<List<Video>> getVideos() {
-    return _videoCollection
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => Video.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-            .toList());
-  }
-
   // Get video by ID
   Future<Video> getVideoById(String id) async {
     DocumentSnapshot doc = await _videoCollection.doc(id).get();
@@ -555,16 +718,6 @@ class FirebaseService {
 
   // ==================== LKPD OPERATIONS ====================
 
-  // Get semua LKPD
-  Stream<List<LKPD>> getLKPD() {
-    return _lkpdCollection
-        .orderBy('updatedAt', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => LKPD.fromFirestore(doc))
-            .toList());
-  }
-
   // Get LKPD by ID
   Future<LKPD?> getLKPDById(String id) async {
     try {
@@ -577,9 +730,9 @@ class FirebaseService {
       print('Error getting LKPD: $e');
       return null;
     }
-  }
+    }
 
-  // Add LKPD dengan upload gambar
+ // Add LKPD dengan upload gambar
   Future<String> addLKPD(LKPD lkpd, File? gambar) async {
     try {
       String gambarUrl = lkpd.gambarUrl;
@@ -601,8 +754,17 @@ class FirebaseService {
       for (Kegiatan kegiatan in lkpd.kegiatanList) {
         String kegiatanGambarUrl = kegiatan.gambarUrl ?? '';
         
-        // Untuk sekarang kita simpan URL yang sudah ada
-        // Implementasi upload gambar kegiatan akan ditambahkan di form
+        // Upload gambar kegiatan jika ada file
+        if (kegiatan.gambarFile != null) {
+          print('Uploading kegiatan image: ${kegiatan.judul}');
+          String? uploadedUrl = await _cPanelService.uploadImage(kegiatan.gambarFile!);
+          if (uploadedUrl != null) {
+            kegiatanGambarUrl = uploadedUrl;
+            print('Kegiatan image uploaded successfully: $uploadedUrl');
+          } else {
+            print('Failed to upload kegiatan image');
+          }
+        }
         
         updatedKegiatanList.add(Kegiatan(
           id: kegiatan.id,
@@ -666,12 +828,22 @@ class FirebaseService {
         }
       }
 
-      // Process kegiatan list
+      // Process kegiatan list dengan upload gambar
       List<Kegiatan> updatedKegiatanList = [];
       for (Kegiatan kegiatan in lkpd.kegiatanList) {
         String kegiatanGambarUrl = kegiatan.gambarUrl ?? '';
         
-        // Implementasi upload gambar kegiatan akan ditambahkan di form
+        // Upload gambar kegiatan baru jika ada file
+        if (kegiatan.gambarFile != null) {
+          print('Uploading updated kegiatan image: ${kegiatan.judul}');
+          String? uploadedUrl = await _cPanelService.uploadImage(kegiatan.gambarFile!);
+          if (uploadedUrl != null) {
+            kegiatanGambarUrl = uploadedUrl;
+            print('Kegiatan image updated successfully: $uploadedUrl');
+          } else {
+            print('Failed to upload updated kegiatan image');
+          }
+        }
         
         updatedKegiatanList.add(Kegiatan(
           id: kegiatan.id,
@@ -750,137 +922,45 @@ class FirebaseService {
     }
   }
 
-  // Preload LKPD - method untuk membuat sample data
-  Future<void> preloadLKPD() async {
-    try {
-      // Cek apakah sudah ada LKPD
-      final QuerySnapshot snapshot = await _lkpdCollection.limit(1).get();
-      
-      if (snapshot.docs.isEmpty) {
-        // Buat sample LKPD
-        final sampleLKPD = LKPD(
-          id: '',
-          judul: 'LKPD 1: Mengenal Hak dan Kewajiban',
-          deskripsi: 'Lembar kerja untuk memahami konsep dasar hak dan kewajiban dalam kehidupan sehari-hari',
-          gambarUrl: '',
-          kompetensiDasar: '3.2 Menganalisis pelaksanaan kewajiban, hak, dan tanggung jawab sebagai warga negara beserta dampaknya dalam kehidupan sehari-hari',
-          indikatorPencapaian: 'Siswa dapat mengidentifikasi dan menganalisis hak dan kewajiban di lingkungan rumah, sekolah, dan masyarakat',
-          rubrikPenilaian: '''
-Kriteria Penilaian:
-• Sangat Baik (90-100): Mampu mengidentifikasi dan menganalisis dengan tepat dan lengkap
-• Baik (80-89): Mampu mengidentifikasi dan menganalisis dengan tepat
-• Cukup (70-79): Mampu mengidentifikasi dengan tepat namun analisis kurang lengkap
-• Perlu Bimbingan (<70): Masih memerlukan bimbingan dalam mengidentifikasi dan menganalisis
-          ''',
-          estimasiWaktu: 90,
-          kegiatanList: [
-            Kegiatan(
-              id: 'kegiatan1',
-              judul: 'Observasi Hak dan Kewajiban di Rumah',
-              instruksi: 'Amati kegiatan di rumahmu selama satu hari. Identifikasi hak dan kewajiban yang kamu miliki sebagai anggota keluarga.',
-              type: KegiatanType.observasi,
-              estimasiWaktu: 30,
-              pertanyaanPemandu: [
-                'Apa saja hak yang kamu miliki di rumah?',
-                'Apa saja kewajiban yang harus kamu lakukan di rumah?',
-                'Mengapa penting untuk melaksanakan kewajiban di rumah?',
-                'Apa yang terjadi jika hak dan kewajiban tidak seimbang?'
-              ],
-            ),
-            Kegiatan(
-              id: 'kegiatan2',
-              judul: 'Analisis Kasus Pelanggaran Hak',
-              instruksi: 'Baca kasus yang diberikan dan analisis pelanggaran hak yang terjadi serta dampaknya.',
-              type: KegiatanType.analisis,
-              estimasiWaktu: 30,
-              pertanyaanPemandu: [
-                'Hak apa yang dilanggar dalam kasus tersebut?',
-                'Siapa yang bertanggung jawab melindungi hak tersebut?',
-                'Apa dampak dari pelanggaran hak tersebut?',
-                'Bagaimana cara mencegah pelanggaran serupa?'
-              ],
-            ),
-            Kegiatan(
-              id: 'kegiatan3',
-              judul: 'Refleksi dan Komitmen',
-              instruksi: 'Buatlah refleksi tentang pembelajaran hari ini dan komitmenmu dalam melaksanakan hak dan kewajiban.',
-              type: KegiatanType.refleksi,
-              estimasiWaktu: 30,
-              pertanyaanPemandu: [
-                'Apa hal baru yang kamu pelajari hari ini?',
-                'Bagaimana kamu akan menerapkan pengetahuan ini dalam kehidupan sehari-hari?',
-                'Komitmen apa yang akan kamu buat untuk menjadi warga yang bertanggung jawab?'
-              ],
-            ),
-          ],
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        );
-        
-        await addLKPDData(sampleLKPD);
-        print('Sample LKPD created successfully');
-      } else {
-        print('LKPD data already exists');
-      }
-    } catch (e) {
-      print('Error preloading LKPD: $e');
-    }
-  }
-
   // ADMIN PASSWORD OPERATIONS
   // PERBAIKAN: Verifikasi password admin yang lebih robust
   Future<bool> verifyAdminPassword(String password) async {
     try {
-      print('Verifikasi password dimulai');
-      print('Mencoba verifikasi dengan Firebase');
-      
-      // Periksa apakah koleksi settings dan dokumen admin sudah ada
+      print('🔐 Verifying admin password...');
       DocumentSnapshot doc = await _firestore.collection('settings').doc('admin').get();
       
-      // Cek jika dokumen tidak ada atau null
       if (!doc.exists) {
-        print('Dokumen admin tidak ditemukan, menjalankan setup password...');
+        print('🔧 Admin document not found, setting up...');
         await setupAdminPassword();
-        // Ambil dokumen yang baru dibuat
         doc = await _firestore.collection('settings').doc('admin').get();
       }
       
-      // Cek jika data masih null (seharusnya tidak terjadi setelah setup)
       if (doc.data() == null) {
-        print('Data admin masih null setelah setup, melakukan setup ulang...');
+        print('🔧 Admin data is null, recreating...');
         await _firestore.collection('settings').doc('admin').set({
-          'password': 'admin123', // Default password
+          'password': 'admin123',
         });
         doc = await _firestore.collection('settings').doc('admin').get();
       }
       
-      // Sekarang kita yakin data tidak null
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
       String storedPassword = data['password'] ?? '';
       
-      print('Data admin ditemukan, password tersimpan ada');
       bool result = password == storedPassword;
-      print('Hasil verifikasi: $result');
+      print(result ? '✅ Password verified' : '❌ Password incorrect');
       
       return result;
     } catch (e) {
-      print('Error verifying admin password: $e');
+      print('❌ Error verifying admin password: $e');
       
-      // Jika error disebabkan oleh masalah cast, buat dokumen admin
       if (e.toString().contains("type 'Null' is not a subtype of type 'Map<String, dynamic>'")) {
-        print('Error cast data, mencoba membuat dokumen admin baru...');
         try {
           await _firestore.collection('settings').doc('admin').set({
-            'password': 'admin123', // Default password
+            'password': 'admin123',
           });
-          print('Dokumen admin berhasil dibuat');
-          
-          // Coba verifikasi lagi
-          if (password == 'admin123') {
-            return true;
-          }
+          return password == 'admin123';
         } catch (setupError) {
-          print('Gagal membuat dokumen admin: $setupError');
+          print('❌ Failed to setup admin: $setupError');
         }
       }
       return false;
@@ -890,30 +970,26 @@ Kriteria Penilaian:
   // Set password admin (default jika belum ada)
   Future<void> setupAdminPassword() async {
     try {
-      print('Setting up admin password...');
+      print('🔧 Setting up admin password...');
       DocumentSnapshot doc = await _firestore.collection('settings').doc('admin').get();
       
       if (!doc.exists) {
-        print('Dokumen admin tidak ada, membuat baru...');
         await _firestore.collection('settings').doc('admin').set({
-          'password': 'admin123', // Default password
+          'password': 'admin123',
         });
-        print('Dokumen admin berhasil dibuat dengan password default');
+        print('✅ Admin password setup completed');
       } else {
-        print('Dokumen admin sudah ada');
+        print('ℹ️ Admin password already exists');
       }
     } catch (e) {
-      print('Error setting up admin password: $e');
-      
-      // Jika terjadi error, coba buat ulang dokumen
+      print('❌ Error setting up admin password: $e');
       try {
-        print('Mencoba ulang membuat dokumen admin...');
         await _firestore.collection('settings').doc('admin').set({
-          'password': 'admin123', // Default password
+          'password': 'admin123',
         });
-        print('Dokumen admin berhasil dibuat pada percobaan ulang');
+        print('✅ Admin password setup completed on retry');
       } catch (retryError) {
-        print('Gagal membuat dokumen admin pada percobaan ulang: $retryError');
+        print('❌ Failed to setup admin on retry: $retryError');
       }
     }
   }
@@ -940,26 +1016,6 @@ Kriteria Penilaian:
     }
   }
 
-  // PRELOAD METHODS
-  // Tambahkan method ini ke FirebaseService
-  Future<void> preloadVideos() async {
-    try {
-      await _videoCollection.get();
-      print('Video data preloaded');
-    } catch (e) {
-      print('Error preloading videos: $e');
-    }
-  }
-
-  Future<void> preloadMateri() async {
-    try {
-      await _materiCollection.get();
-      print('Materi data preloaded');
-    } catch (e) {
-      print('Error preloading materi: $e');
-    }
-  }
-  
   // Metode untuk melakukan inisialisasi awal database
   Future<void> initializeDatabase() async {
     print('Initializing Firebase Database...');
@@ -972,7 +1028,7 @@ Kriteria Penilaian:
       await _firestore.collection('video').limit(1).get();
       await _firestore.collection('evaluasi').limit(1).get();
       await _firestore.collection('soal').limit(1).get();
-      await _firestore.collection('lkpd').limit(1).get(); // Tambah LKPD
+      await _firestore.collection('lkpd').limit(1).get();
       
       print('Database initialized successfully');
     } catch (e) {
@@ -1058,5 +1114,21 @@ Kriteria Penilaian:
       print('Error saving identitas: $e');
       throw e;
     }
+  }
+
+  // ✅ METHOD UNTUK DEBUGGING (OPSIONAL)
+  static void printCacheStatus() {
+    print('🔍 Cache Debug Info:');
+    print('  📹 Videos: ${_cachedVideos?.length ?? 'Not loaded'} items');
+    print('  📚 Materi: ${_cachedMateri?.length ?? 'Not loaded'} items');
+    print('  📝 LKPD: ${_cachedLKPD?.length ?? 'Not loaded'} items');
+  }
+
+  // Method untuk clear cache jika diperlukan
+  static void clearCache() {
+    _cachedVideos = null;
+    _cachedMateri = null;
+    _cachedLKPD = null;
+    print('🧹 Cache cleared');
   }
 }
