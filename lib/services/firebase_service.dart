@@ -14,6 +14,7 @@ class FirebaseService {
   final CollectionReference _soalCollection = FirebaseFirestore.instance.collection('soal');
   final CollectionReference _identitasCollection = FirebaseFirestore.instance.collection('identitas');
   final CollectionReference _lkpdCollection = FirebaseFirestore.instance.collection('lkpd');
+  final CollectionReference _hasilSiswaCollection = FirebaseFirestore.instance.collection('hasil_siswa');
 
   // ✅ CACHE YANG TIDAK BLOCKING - OPTIONAL CACHING
   static List<Video>? _cachedVideos;
@@ -132,6 +133,26 @@ class FirebaseService {
     });
   }
 
+  // ✅ NEW METHOD: Get LKPD List (untuk cache dan admin)
+  Future<List<LKPD>> getLKPDList() async {
+    try {
+      print('📝 Getting LKPD list...');
+      final QuerySnapshot snapshot = await _lkpdCollection
+          .orderBy('updatedAt', descending: true)
+          .get();
+      
+      List<LKPD> lkpdList = snapshot.docs
+          .map((doc) => LKPD.fromFirestore(doc))
+          .toList();
+      
+      print('✅ LKPD list retrieved: ${lkpdList.length} items');
+      return lkpdList;
+    } catch (e) {
+      print('❌ Error getting LKPD list: $e');
+      throw Exception('Gagal mengambil daftar LKPD: $e');
+    }
+  }
+
   // ✅ SAMPLE DATA CREATION
   Future<void> _createSampleLKPD() async {
     try {
@@ -201,7 +222,183 @@ Kriteria Penilaian:
     }
   }
 
-  // MATERI OPERATIONS
+  // ==================== HASIL SISWA OPERATIONS ====================
+
+  // Simpan hasil siswa
+  Future<void> simpanHasilSiswa(HasilSiswa hasilSiswa) async {
+    try {
+      print('💾 Menyimpan hasil siswa: ${hasilSiswa.namaLengkap}');
+      await _hasilSiswaCollection
+          .doc(hasilSiswa.id)
+          .set(hasilSiswa.toMap());
+      print('✅ Hasil siswa berhasil disimpan');
+    } catch (e) {
+      print('❌ Error menyimpan hasil siswa: $e');
+      throw Exception('Gagal menyimpan hasil siswa: $e');
+    }
+  }
+
+  // Get hasil siswa dengan filter
+  Future<List<HasilSiswa>> getHasilSiswa({
+    String? jenisKegiatan,
+    String? kelas,
+  }) async {
+    try {
+      print('📊 Mengambil hasil siswa dengan filter - jenis: $jenisKegiatan, kelas: $kelas');
+      
+      Query query = _hasilSiswaCollection;
+      
+      // Jika ada filter, terapkan secara terpisah untuk menghindari masalah composite index
+      if (jenisKegiatan != null && kelas != null) {
+        // Jika kedua filter ada, gunakan where untuk keduanya
+        query = query
+            .where('jenisKegiatan', isEqualTo: jenisKegiatan)
+            .where('kelas', isEqualTo: kelas);
+      } else if (jenisKegiatan != null) {
+        // Hanya filter jenis kegiatan
+        query = query.where('jenisKegiatan', isEqualTo: jenisKegiatan);
+      } else if (kelas != null) {
+        // Hanya filter kelas
+        query = query.where('kelas', isEqualTo: kelas);
+      }
+      
+      // Ambil data tanpa orderBy untuk menghindari composite index requirement
+      final snapshot = await query.get();
+      
+      List<HasilSiswa> hasilList = snapshot.docs
+          .map((doc) => HasilSiswa.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+          .toList();
+      
+      // Sort di client side berdasarkan tanggal pengerjaan (descending)
+      hasilList.sort((a, b) => b.tanggalPengerjaan.compareTo(a.tanggalPengerjaan));
+      
+      print('✅ Berhasil mengambil ${hasilList.length} hasil siswa');
+      return hasilList;
+    } catch (e) {
+      print('❌ Error mengambil hasil siswa: $e');
+      throw Exception('Gagal mengambil hasil siswa: $e');
+    }
+  }
+
+  // Get daftar kelas yang tersedia
+  Future<List<String>> getKelasList() async {
+    try {
+      print('📚 Mengambil daftar kelas...');
+      // Ambil semua dokumen tanpa orderBy
+      final snapshot = await _hasilSiswaCollection.get();
+      final kelasSet = <String>{};
+      
+      for (final doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        if (data['kelas'] != null) {
+          kelasSet.add(data['kelas']);
+        }
+      }
+      
+      final kelasList = kelasSet.toList();
+      kelasList.sort(); // Sort di client side
+      
+      print('✅ Ditemukan ${kelasList.length} kelas: $kelasList');
+      return kelasList;
+    } catch (e) {
+      print('❌ Error mengambil daftar kelas: $e');
+      throw Exception('Gagal mengambil daftar kelas: $e');
+    }
+  }
+
+  // Get hasil siswa berdasarkan kegiatan
+  Future<List<HasilSiswa>> getHasilSiswaByKegiatan(String kegiatanId, String jenisKegiatan) async {
+    try {
+      print('📋 Mengambil hasil siswa untuk kegiatan: $kegiatanId ($jenisKegiatan)');
+      
+      final snapshot = await _hasilSiswaCollection
+          .where('kegiatanId', isEqualTo: kegiatanId)
+          .where('jenisKegiatan', isEqualTo: jenisKegiatan)
+          .get();
+      
+      List<HasilSiswa> hasilList = snapshot.docs
+          .map((doc) => HasilSiswa.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+          .toList();
+      
+      // Sort di client side berdasarkan tanggal pengerjaan (descending)
+      hasilList.sort((a, b) => b.tanggalPengerjaan.compareTo(a.tanggalPengerjaan));
+      
+      print('✅ Ditemukan ${hasilList.length} hasil untuk kegiatan $kegiatanId');
+      return hasilList;
+    } catch (e) {
+      print('❌ Error mengambil hasil siswa by kegiatan: $e');
+      throw Exception('Gagal mengambil hasil siswa: $e');
+    }
+  }
+
+  // Get statistik hasil siswa
+  Future<Map<String, dynamic>> getStatistikHasilSiswa() async {
+    try {
+      print('📈 Mengambil statistik hasil siswa...');
+      
+      // Ambil semua data tanpa filter untuk menghindari masalah index
+      final snapshot = await _hasilSiswaCollection.get();
+      
+      int totalLKPD = 0;
+      int totalEvaluasi = 0;
+      Map<String, int> kelasCount = {};
+      List<int> nilaiEvaluasi = [];
+      
+      for (final doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final jenisKegiatan = data['jenisKegiatan'] as String?;
+        final kelas = data['kelas'] as String?;
+        final nilai = data['nilaiEvaluasi'] as int?;
+        
+        if (jenisKegiatan == 'lkpd') {
+          totalLKPD++;
+        } else if (jenisKegiatan == 'evaluasi') {
+          totalEvaluasi++;
+          if (nilai != null) {
+            nilaiEvaluasi.add(nilai);
+          }
+        }
+        
+        if (kelas != null) {
+          kelasCount[kelas] = (kelasCount[kelas] ?? 0) + 1;
+        }
+      }
+      
+      double rataRataNilai = 0.0;
+      if (nilaiEvaluasi.isNotEmpty) {
+        rataRataNilai = nilaiEvaluasi.reduce((a, b) => a + b) / nilaiEvaluasi.length;
+      }
+      
+      final statistik = {
+        'totalHasil': snapshot.docs.length,
+        'totalLKPD': totalLKPD,
+        'totalEvaluasi': totalEvaluasi,
+        'rataRataNilai': rataRataNilai,
+        'distribusiKelas': kelasCount,
+        'totalKelas': kelasCount.keys.length,
+      };
+      
+      print('✅ Statistik hasil siswa: $statistik');
+      return statistik;
+    } catch (e) {
+      print('❌ Error mengambil statistik: $e');
+      throw Exception('Gagal mengambil statistik: $e');
+    }
+  }
+
+  // Hapus hasil siswa
+  Future<void> deleteHasilSiswa(String id) async {
+    try {
+      print('🗑️ Menghapus hasil siswa: $id');
+      await _hasilSiswaCollection.doc(id).delete();
+      print('✅ Hasil siswa berhasil dihapus');
+    } catch (e) {
+      print('❌ Error menghapus hasil siswa: $e');
+      throw Exception('Gagal menghapus hasil siswa: $e');
+    }
+  }
+
+  // ==================== MATERI OPERATIONS ====================
   // Get materi by ID
   Future<Materi> getMateriById(String id) async {
     DocumentSnapshot doc = await _materiCollection.doc(id).get();
@@ -365,7 +562,7 @@ Kriteria Penilaian:
     await _materiCollection.doc(id).delete();
   }
 
-  // VIDEO OPERATIONS
+  // ==================== VIDEO OPERATIONS ====================
   // Get video by ID
   Future<Video> getVideoById(String id) async {
     DocumentSnapshot doc = await _videoCollection.doc(id).get();
@@ -420,7 +617,7 @@ Kriteria Penilaian:
     await _videoCollection.doc(id).delete();
   }
 
-  // EVALUASI OPERATIONS
+  // ==================== EVALUASI OPERATIONS ====================
   // Get semua evaluasi
   Stream<List<Evaluasi>> getEvaluasi() {
     return _evaluasiCollection
@@ -523,7 +720,7 @@ Kriteria Penilaian:
     print("Evaluasi $id deleted successfully");
   }
 
-  // SOAL OPERATIONS
+  // ==================== SOAL OPERATIONS ====================
   // Get soal by ID
   Future<Soal> getSoalById(String id) async {
     print("Getting soal by ID: $id");
@@ -558,11 +755,11 @@ Kriteria Penilaian:
         Soal soal = await getSoalById(soalId);
         soalList.add(soal);
         print("Added soal to list: ${soal.pertanyaan}");
-      } catch (e) {
-        print("Error loading soal $soalId: $e");
-        // Continue with other soal even if one fails
+        } catch (e) {
+          print("Error loading soal $soalId: $e");
+          // Continue with other soal even if one fails
+        }
       }
-    }
     
     print("Total soal loaded: ${soalList.length}");
     return soalList;
@@ -730,9 +927,9 @@ Kriteria Penilaian:
       print('Error getting LKPD: $e');
       return null;
     }
-    }
+  }
 
- // Add LKPD dengan upload gambar
+  // Add LKPD dengan upload gambar
   Future<String> addLKPD(LKPD lkpd, File? gambar) async {
     try {
       String gambarUrl = lkpd.gambarUrl;
@@ -922,7 +1119,7 @@ Kriteria Penilaian:
     }
   }
 
-  // ADMIN PASSWORD OPERATIONS
+  // ==================== ADMIN PASSWORD OPERATIONS ====================
   // PERBAIKAN: Verifikasi password admin yang lebih robust
   Future<bool> verifyAdminPassword(String password) async {
     try {
@@ -1029,6 +1226,7 @@ Kriteria Penilaian:
       await _firestore.collection('evaluasi').limit(1).get();
       await _firestore.collection('soal').limit(1).get();
       await _firestore.collection('lkpd').limit(1).get();
+      await _firestore.collection('hasil_siswa').limit(1).get();
       
       print('Database initialized successfully');
     } catch (e) {
@@ -1036,7 +1234,7 @@ Kriteria Penilaian:
     }
   }
 
-  // IDENTITAS OPERATIONS
+  // ==================== IDENTITAS OPERATIONS ====================
   // Get Identitas
   Future<Identitas?> getIdentitas() async {
     try {

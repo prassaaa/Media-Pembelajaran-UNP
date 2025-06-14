@@ -19,6 +19,9 @@ class AppConstants {
   static const String routeLkpd = '/lkpd';
   static const String routeLkpdDetail = '/lkpd/detail';
   
+  // FORM IDENTITAS ROUTE
+  static const String routeFormIdentitas = '/form-identitas';
+  
   static const String routeAdmin = '/admin';
   static const String routeAdminIdentitas = '/admin/identitas';
   static const String routeAdminMateri = '/admin/materi';
@@ -32,6 +35,9 @@ class AppConstants {
   // Admin LKPD Routes
   static const String routeAdminLkpd = '/admin/lkpd';
   static const String routeAdminLkpdForm = '/admin/lkpd/form';
+  
+  // ADMIN HASIL SISWA ROUTE
+  static const String routeAdminHasilSiswa = '/admin/hasil-siswa';
   
   // Shared preferences keys
   static const String prefAdminPassword = 'admin_password';

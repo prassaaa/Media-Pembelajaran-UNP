@@ -1,7 +1,9 @@
+// lib/screens/lkpd/lkpd_detail_screen.dart (Update)
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:pembelajaran_app/config/theme.dart';
 import 'package:pembelajaran_app/models/models.dart';
+import 'package:pembelajaran_app/services/firebase_service.dart';
 import 'package:pembelajaran_app/widgets/loading_widget.dart';
 
 class LkpdDetailScreen extends StatefulWidget {
@@ -12,17 +14,21 @@ class LkpdDetailScreen extends StatefulWidget {
 }
 
 class _LkpdDetailScreenState extends State<LkpdDetailScreen> {
+  final FirebaseService _firebaseService = FirebaseService();
   LKPD? _lkpd;
+  Map<String, String>? _identitasSiswa;
   int _currentKegiatanIndex = 0;
   final PageController _pageController = PageController();
   final Map<String, TextEditingController> _answerControllers = {};
+  bool _isLoading = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     final Object? args = ModalRoute.of(context)?.settings.arguments;
-    if (args != null && args is LKPD) {
-      _lkpd = args;
+    if (args != null && args is Map<String, dynamic>) {
+      _lkpd = args['kegiatan'] as LKPD;
+      _identitasSiswa = Map<String, String>.from(args['identitasSiswa']);
       _initializeControllers();
     }
   }
@@ -71,97 +77,139 @@ class _LkpdDetailScreenState extends State<LkpdDetailScreen> {
     }
   }
 
-  void _showCompletionDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppTheme.successColor.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_circle,
-                  color: AppTheme.successColor,
-                  size: 24,
-                ),
+  Future<void> _showCompletionDialog() async {
+    // Siapkan data jawaban
+    final Map<String, dynamic> jawabanData = {};
+    for (final entry in _answerControllers.entries) {
+      if (entry.value.text.isNotEmpty) {
+        jawabanData[entry.key] = entry.value.text;
+      }
+    }
+
+    // Simpan hasil ke Firebase
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final hasilSiswa = HasilSiswa(
+        id: '${_identitasSiswa!['namaLengkap']}_${_lkpd!.id}_${DateTime.now().millisecondsSinceEpoch}',
+        namaLengkap: _identitasSiswa!['namaLengkap']!,
+        nomorAbsen: _identitasSiswa!['nomorAbsen']!,
+        kelas: _identitasSiswa!['kelas']!,
+        jenisKegiatan: 'lkpd',
+        kegiatanId: _lkpd!.id,
+        judulKegiatan: _lkpd!.judul,
+        jawaban: jawabanData,
+        tanggalPengerjaan: DateTime.now(),
+      );
+
+      await _firebaseService.simpanHasilSiswa(hasilSiswa);
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text('LKPD Selesai!'),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Selamat! Anda telah menyelesaikan semua kegiatan dalam LKPD "${_lkpd?.judul ?? ''}".',
-                style: AppTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppTheme.successColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Refleksi Pembelajaran:',
-                      style: AppTheme.bodyMedium.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.successColor,
-                      ),
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.successColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '• Apa hal baru yang Anda pelajari?\n'
-                      '• Bagaimana Anda akan menerapkan pengetahuan ini?\n'
-                      '• Kegiatan mana yang paling menarik?',
-                      style: AppTheme.bodySmall.copyWith(
-                        color: AppTheme.successColor,
-                      ),
+                    child: const Icon(
+                      Icons.check_circle,
+                      color: AppTheme.successColor,
+                      size: 24,
                     ),
-                  ],
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text('LKPD Selesai!'),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Selamat ${_identitasSiswa!['namaLengkap']}! Anda telah menyelesaikan LKPD "${_lkpd?.judul ?? ''}".',
+                    style: AppTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppTheme.successColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Jawaban Anda telah tersimpan:',
+                          style: AppTheme.bodyMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.successColor,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '• Nama: ${_identitasSiswa!['namaLengkap']}\n'
+                          '• Absen: ${_identitasSiswa!['nomorAbsen']}\n'
+                          '• Kelas: ${_identitasSiswa!['kelas']}\n'
+                          '• Hasil akan dievaluasi oleh guru',
+                          style: AppTheme.bodySmall.copyWith(
+                            color: AppTheme.successColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close dialog
+                    Navigator.pop(context); // Back to LKPD list
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.successColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Selesai'),
                 ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Back to LKPD list
-              },
-              child: const Text('Kembali ke Daftar LKPD'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Back to LKPD list
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.successColor,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Selesai'),
-            ),
-          ],
+              ],
+            );
+          },
         );
-      },
-    );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menyimpan hasil: ${e.toString()}'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -169,6 +217,12 @@ class _LkpdDetailScreenState extends State<LkpdDetailScreen> {
     if (_lkpd == null) {
       return const Scaffold(
         body: LoadingWidget(message: 'Memuat LKPD...'),
+      );
+    }
+
+    if (_isLoading) {
+      return const Scaffold(
+        body: LoadingWidget(message: 'Menyimpan hasil LKPD...'),
       );
     }
 
@@ -245,6 +299,30 @@ class _LkpdDetailScreenState extends State<LkpdDetailScreen> {
         },
         body: Column(
           children: [
+            // Info Siswa
+            Container(
+              padding: const EdgeInsets.all(16),
+              color: Colors.orange.withOpacity(0.1),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.person,
+                    color: Colors.orange,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${_identitasSiswa!['namaLengkap']} - Absen: ${_identitasSiswa!['nomorAbsen']} - Kelas: ${_identitasSiswa!['kelas']}',
+                      style: AppTheme.bodyMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange.shade800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            
             // Progress Indicator
             Container(
               padding: const EdgeInsets.all(16),
@@ -357,6 +435,7 @@ class _LkpdDetailScreenState extends State<LkpdDetailScreen> {
     );
   }
 
+  // Sisanya sama seperti kode asli, hanya _buildKegiatanContent yang sama
   Widget _buildKegiatanContent(Kegiatan kegiatan) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),

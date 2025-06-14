@@ -263,8 +263,12 @@ class _LkpdScreenState extends State<LkpdScreen> {
           onTap: () {
             Navigator.pushNamed(
               context,
-              AppConstants.routeLkpdDetail,
-              arguments: lkpd,
+              AppConstants.routeFormIdentitas, // route baru untuk form identitas
+              arguments: {
+                'jenisKegiatan': 'lkpd',
+                'kegiatan': lkpd,
+                'routeTarget': AppConstants.routeLkpdDetail,
+              },
             );
           },
           child: Column(

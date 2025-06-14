@@ -187,8 +187,12 @@ class _EvaluasiScreenState extends State<EvaluasiScreen> {
           onTap: () {
             Navigator.pushNamed(
               context,
-              AppConstants.routeEvaluasiDetail,
-              arguments: evaluasi,
+              AppConstants.routeFormIdentitas, // route baru untuk form identitas
+              arguments: {
+                'jenisKegiatan': 'evaluasi',
+                'kegiatan': evaluasi,
+                'routeTarget': AppConstants.routeEvaluasiDetail,
+              },
             );
           },
           child: Padding(

@@ -1,8 +1,10 @@
+// lib/screens/admin/admin_dashboard.dart
 import 'package:flutter/material.dart';
 import 'package:pembelajaran_app/config/constants.dart';
 import 'package:pembelajaran_app/config/theme.dart';
 import 'package:pembelajaran_app/services/firebase_service.dart';
 import 'package:pembelajaran_app/widgets/app_button.dart';
+import 'package:pembelajaran_app/screens/admin/admin_hasil_siswa_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({Key? key}) : super(key: key);
@@ -127,7 +129,7 @@ class AdminDashboard extends StatelessWidget {
                     crossAxisCount: 2,
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 16,
-                    childAspectRatio: 0.85,
+                    childAspectRatio: 0.9, // Ubah dari 0.85 menjadi 0.9 untuk mengurangi tinggi
                     children: [
                       _buildMenuCard(
                         context,
@@ -175,6 +177,17 @@ class AdminDashboard extends StatelessWidget {
                       ),
                       _buildMenuCard(
                         context,
+                        'Hasil Siswa',
+                        'Lihat hasil LKPD dan evaluasi siswa',
+                        Icons.analytics,
+                        Colors.indigo,
+                        () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const AdminHasilSiswaScreen()),
+                        ),
+                      ),
+                      _buildMenuCard(
+                        context,
                         'Identitas Pengembang',
                         'Kelola informasi pengembang aplikasi',
                         Icons.person,
@@ -196,6 +209,7 @@ class AdminDashboard extends StatelessWidget {
                   ),
                 ),
                 // Back Button
+                const SizedBox(height: 16),
                 AppButton(
                   text: 'Kembali ke Aplikasi',
                   icon: Icons.arrow_back,
@@ -241,41 +255,45 @@ class AdminDashboard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(12.0), // Kurangi padding dari 16 ke 12
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12), // Kurangi dari 16 ke 12
                   decoration: BoxDecoration(
                     color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(12), // Kurangi dari 16 ke 12
                   ),
                   child: Icon(
                     icon,
-                    size: 42,
+                    size: 36, // Kurangi dari 42 ke 36
                     color: color,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12), // Kurangi dari 16 ke 12
                 Text(
                   title,
                   style: AppTheme.subtitleMedium.copyWith(
                     fontWeight: FontWeight.bold,
+                    fontSize: 13, // Kurangi ukuran font
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  description,
-                  style: AppTheme.bodySmall.copyWith(
-                    color: AppTheme.secondaryTextColor,
+                const SizedBox(height: 6), // Kurangi dari 8 ke 6
+                Flexible( // Wrap dengan Flexible untuk mencegah overflow
+                  child: Text(
+                    description,
+                    style: AppTheme.bodySmall.copyWith(
+                      color: AppTheme.secondaryTextColor,
+                      fontSize: 11, // Kurangi ukuran font
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

@@ -664,3 +664,67 @@ class LKPDHelper {
     };
   }
 }
+
+class HasilSiswa {
+  final String id;
+  final String namaLengkap;
+  final String nomorAbsen;
+  final String kelas;
+  final String jenisKegiatan; // 'lkpd' atau 'evaluasi'
+  final String kegiatanId;
+  final String judulKegiatan;
+  final Map<String, dynamic> jawaban;
+  final int? nilaiEvaluasi; // hanya untuk evaluasi
+  final int? jumlahBenar; // hanya untuk evaluasi
+  final int? totalSoal; // hanya untuk evaluasi
+  final DateTime tanggalPengerjaan;
+
+  HasilSiswa({
+    required this.id,
+    required this.namaLengkap,
+    required this.nomorAbsen,
+    required this.kelas,
+    required this.jenisKegiatan,
+    required this.kegiatanId,
+    required this.judulKegiatan,
+    required this.jawaban,
+    this.nilaiEvaluasi,
+    this.jumlahBenar,
+    this.totalSoal,
+    required this.tanggalPengerjaan,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'namaLengkap': namaLengkap,
+      'nomorAbsen': nomorAbsen,
+      'kelas': kelas,
+      'jenisKegiatan': jenisKegiatan,
+      'kegiatanId': kegiatanId,
+      'judulKegiatan': judulKegiatan,
+      'jawaban': jawaban,
+      'nilaiEvaluasi': nilaiEvaluasi,
+      'jumlahBenar': jumlahBenar,
+      'totalSoal': totalSoal,
+      'tanggalPengerjaan': Timestamp.fromDate(tanggalPengerjaan)
+    };
+  }
+
+  factory HasilSiswa.fromMap(Map<String, dynamic> map, String id) {
+    return HasilSiswa(
+      id: id,
+      namaLengkap: map['namaLengkap'] ?? '',
+      nomorAbsen: map['nomorAbsen'] ?? '',
+      kelas: map['kelas'] ?? '',
+      jenisKegiatan: map['jenisKegiatan'] ?? '',
+      kegiatanId: map['kegiatanId'] ?? '',
+      judulKegiatan: map['judulKegiatan'] ?? '',
+      jawaban: Map<String, dynamic>.from(map['jawaban'] ?? {}),
+      nilaiEvaluasi: map['nilaiEvaluasi'],
+      jumlahBenar: map['jumlahBenar'],
+      totalSoal: map['totalSoal'],
+      tanggalPengerjaan: (map['tanggalPengerjaan'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
+}

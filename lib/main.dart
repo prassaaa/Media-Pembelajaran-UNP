@@ -29,6 +29,10 @@ import 'package:pembelajaran_app/screens/lkpd/lkpd_detail_screen.dart';
 import 'package:pembelajaran_app/screens/admin/admin_lkpd_screen.dart';
 import 'package:pembelajaran_app/screens/admin/admin_lkpd_form.dart';
 
+// IMPORT BARU UNTUK FORM IDENTITAS DAN HASIL SISWA
+import 'package:pembelajaran_app/screens/common/form_identitas_screen.dart';
+import 'package:pembelajaran_app/screens/admin/admin_hasil_siswa_screen.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -104,6 +108,9 @@ class MyApp extends StatelessWidget {
         AppConstants.routeLkpd: (context) => const LkpdScreen(),
         AppConstants.routeLkpdDetail: (context) => const LkpdDetailScreen(),
         
+        // FORM IDENTITAS ROUTE (BARU)
+        AppConstants.routeFormIdentitas: (context) => const FormIdentitasScreen(),
+        
         // Admin Routes
         AppConstants.routeAdmin: (context) => const AdminDashboard(),
         AppConstants.routeAdminMateri: (context) => const AdminMateriScreen(),
@@ -118,6 +125,9 @@ class MyApp extends StatelessWidget {
         // Admin LKPD Routes
         AppConstants.routeAdminLkpd: (context) => const AdminLkpdScreen(),
         AppConstants.routeAdminLkpdForm: (context) => const AdminLkpdForm(),
+        
+        // ADMIN HASIL SISWA ROUTE (BARU)
+        AppConstants.routeAdminHasilSiswa: (context) => const AdminHasilSiswaScreen(),
       },
     );
   }
